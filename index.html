@@ -19,16 +19,27 @@
     .btn-comment { background:#007bff; color:#fff; }
     .btn-edit:hover { background:#218838; }
     .btn-comment:hover { background:#0056b3; }
+    /* Adicionado para mostrar mensagens de depuração */
+    #debug { margin-top:1rem; padding:.5rem; border:1px dashed #ccc; display:none; }
   </style>
 </head>
 <body>
   <h1>Painel de Cards</h1>
   <div id="status">Carregando…</div>
   <ul id="lista"></ul>
+  <div id="debug"></div>
 
   <script>
     // URL do seu Web App Apps Script
+    // ⚠️ IMPORTANTE: Para produção, substitua por URL sem '/dev' no final
     const WEB_APP = 'https://script.google.com/macros/s/AKfycbz8q0sNKNA7JO_8NZw9_DGduOJ1qIExzbkSPSvHcedX/dev';
+
+    // Mostrar mensagens de depuração
+    function debug(message) {
+      const debugDiv = document.getElementById('debug');
+      debugDiv.style.display = 'block';
+      debugDiv.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+    }
 
     // 1) JSONP GET para buscar os dados
     function loadData() {
@@ -69,16 +80,30 @@
         btnEdit.onclick = () => {
           const novo = prompt('Valor para coluna I:', item.I||'');
           if (novo === null) return;
+          
+          debug(`Enviando atualização para linha ${item._row}, valor: ${novo}`);
+          
+          // Dados a serem enviados
+          const data = {
+            action: 'updateI',
+            row: item._row,
+            value: novo
+          };
+          
+          // Enviar via fetch API
           fetch(WEB_APP, {
             method: 'POST',
-            mode:   'no-cors',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({
-              action: 'updateI',
-              row:    item._row,
-              value:  novo
-            })
-          }).then(loadData);
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+          .then(response => {
+            debug(`Resposta recebida para atualização`);
+            setTimeout(loadData, 1000); // Recarregar após 1 segundo
+          })
+          .catch(error => {
+            debug(`Erro ao atualizar: ${error}`);
+          });
         };
 
         // Botão para comentários
@@ -92,16 +117,30 @@
             : 'Digite seu comentário:';
           const novo = prompt(msg);
           if (!novo) return;
+          
+          debug(`Enviando comentário para linha ${item._row}: ${novo}`);
+          
+          // Dados a serem enviados
+          const data = {
+            action: 'addComment',
+            row: item._row,
+            comment: novo
+          };
+          
+          // Enviar via fetch API
           fetch(WEB_APP, {
             method: 'POST',
-            mode:   'no-cors',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({
-              action:  'addComment',
-              row:     item._row,
-              comment: novo
-            })
-          }).then(loadData);
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+          .then(response => {
+            debug(`Resposta recebida para comentário`);
+            setTimeout(loadData, 1000); // Recarregar após 1 segundo
+          })
+          .catch(error => {
+            debug(`Erro ao adicionar comentário: ${error}`);
+          });
         };
 
         li.append(txt, btnEdit, btnC);
