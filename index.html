@@ -4,22 +4,20 @@
   <meta charset="UTF-8">
   <title>Painel de Cards</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
-    #status { font-weight: bold; margin-bottom: 1rem; }
-    ul { list-style: none; padding: 0; }
+    body { font-family: sans-serif; max-width:600px; margin:auto; padding:1rem; }
+    #status { font-weight:bold; margin-bottom:1rem; }
+    ul { list-style:none; padding:0; }
     li {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: .5rem; border: 1px solid #ccc; border-radius: 4px;
-      margin-bottom: .5rem;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:.5rem; border:1px solid #ccc; border-radius:4px; margin-bottom:.5rem;
     }
-    li:hover { background: #f5f5f5; }
-    .text-item { flex:1; cursor: pointer; }
-    .btn { margin-left: .5rem; padding: .25rem .5rem; border: none;
-           border-radius: 3px; cursor: pointer; }
-    .btn-edit { background: #28a745; color: #fff; }
-    .btn-comment { background: #007bff; color: #fff; }
-    .btn-edit:hover { background: #218838; }
-    .btn-comment:hover { background: #0056b3; }
+    li:hover { background:#f5f5f5; }
+    .text-item { flex:1; cursor:pointer; }
+    .btn { margin-left:.5rem; padding:.25rem .5rem; border:none; border-radius:3px; cursor:pointer; }
+    .btn-edit { background:#28a745; color:white; }
+    .btn-comment { background:#007bff; color:white; }
+    .btn-edit:hover { background:#218838; }
+    .btn-comment:hover { background:#0056b3; }
   </style>
 </head>
 <body>
@@ -28,83 +26,96 @@
   <ul id="lista"></ul>
 
   <script>
-    const BASE_URL = 'https://agenda-portal-2d149-default-rtdb.firebaseio.com/sheets/data';
+    // 👉 Aqui é onde você coloca o URL do seu Web App (desenvolvimento ou exec)
+    const WEB_APP = 'https://script.google.com/macros/s/AKfycbz8q0sNKNA7JO_8NZw9_DGduOJ1qIExzbkSPSvHcedX/dev';
 
+    // 1) Ler todos os registros da planilha via GET ?action=getData
     async function loadData() {
       document.getElementById('status').textContent = 'Carregando…';
       try {
-        const res = await fetch(BASE_URL + '.json');
-        if(!res.ok) throw new Error(res.statusText);
-        const data = await res.json();
-        render(Array.isArray(data) ? data : []);
-        document.getElementById('status').textContent = `Foram carregados ${data.length} registros.`;
+        const res   = await fetch(`${WEB_APP}?action=getData`);
+        const items = await res.json();
+        render(items);
+        document.getElementById('status').textContent =
+          `Foram carregados ${items.length} registros.`;
       } catch(err) {
-        document.getElementById('status').textContent = 'Erro: ' + err.message;
+        document.getElementById('status').textContent =
+          'Erro ao carregar: ' + err.message;
+        console.error(err);
       }
     }
 
+    // 2) Renderiza cada linha como um "card"
     function render(items) {
       const ul = document.getElementById('lista');
       ul.innerHTML = '';
-      if (!items.length) {
+      if (!items || items.length === 0) {
         ul.innerHTML = '<li>Nenhum registro</li>';
         return;
       }
-      items.forEach((item, idx) => {
+      items.forEach(item => {
         const li = document.createElement('li');
-        // Texto
-        const div = document.createElement('div');
-        div.className = 'text-item';
-        div.textContent = Object.entries(item)
-          .filter(([k]) => !['comments','commentCount','I'].includes(k))
+
+        // Texto principal
+        const txt = document.createElement('div');
+        txt.className = 'text-item';
+        txt.textContent = Object.entries(item)
+          .filter(([k]) => !['_row','comments','commentCount'].includes(k))
           .map(([k,v]) => `${k}: ${v}`)
           .join(' │ ');
-        // Botão editar I
+        txt.onclick = () => editarI(item._row, item.I);
+
+        // Botão "Editar I"
         const btnEdit = document.createElement('button');
         btnEdit.className = 'btn btn-edit';
         btnEdit.textContent = `I: ${item.I||''}`;
-        btnEdit.onclick = async () => {
-          const novo = prompt('Novo valor para I:', item.I||'');
-          if (novo === null) return;
-          await fetch(`${BASE_URL}/${idx}/I.json`, {
-            method: 'PUT',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(novo)
-          });
-          item.I = novo;
-          btnEdit.textContent = `I: ${novo}`;
-        };
-        // Botão comentários
+        btnEdit.onclick   = () => editarI(item._row, item.I);
+
+        // Botão "Comentários"
         const btnC = document.createElement('button');
         btnC.className = 'btn btn-comment';
         btnC.textContent = `Comentários (${item.commentCount||0})`;
-        btnC.onclick = async () => {
-          const anteriores = Array.isArray(item.comments) ? item.comments.join('\n') : '';
-          const novo = prompt(
-            anteriores 
-              ? `Comentários anteriores:\n${anteriores}\n\nNovo:` 
-              : 'Seu comentário:'
-          );
-          if (!novo) return;
-          const lista = Array.isArray(item.comments) 
-            ? [...item.comments, novo] 
-            : [novo];
-          await fetch(`${BASE_URL}/${idx}.json`, {
-            method: 'PATCH',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-              comments: lista,
-              commentCount: lista.length
-            })
-          });
-          item.comments = lista;
-          item.commentCount = lista.length;
-          btnC.textContent = `Comentários (${lista.length})`;
-        };
+        btnC.onclick     = () => comentar(item._row, item.comments);
 
-        li.append(div, btnEdit, btnC);
+        li.append(txt, btnEdit, btnC);
         ul.appendChild(li);
       });
+    }
+
+    // 3) Chama o Web App para atualizar a coluna I
+    async function editarI(row, current) {
+      const novo = prompt('Valor para Coluna I:', current||'');
+      if (novo === null) return;
+      await fetch(WEB_APP, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'updateI',
+          row:    row,
+          value:  novo
+        })
+      });
+      loadData();
+    }
+
+    // 4) Chama o Web App para adicionar um comentário
+    async function comentar(row, previous) {
+      const antigas = Array.isArray(previous) ? previous.join('\n') : '';
+      const msg = antigas
+        ? `Comentários anteriores:\n${antigas}\n\nNovo:`
+        : 'Digite seu comentário:';
+      const novo = prompt(msg);
+      if (!novo) return;
+      await fetch(WEB_APP, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'addComment',
+          row:     row,
+          comment: novo
+        })
+      });
+      loadData();
     }
 
     window.onload = loadData;
