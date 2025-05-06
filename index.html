@@ -2,90 +2,613 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Cards</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; max-width:600px; margin:auto; padding:1rem; }
-    h1 { text-align:center; }
-    #status { font-weight:bold; margin-bottom:1rem; }
-    ul { list-style:none; padding:0; }
-    li {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:.5rem; border:1px solid #ccc; border-radius:4px; margin-bottom:.5rem;
+    :root {
+      --primary: #4361ee;
+      --primary-light: #4895ef;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border-radius: 8px;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
     }
-    li:hover { background:#f5f5f5; }
-    .text-item { flex:1; cursor:pointer; }
-    .btn { margin-left:.5rem; padding:.25rem .5rem; border:none; border-radius:3px; cursor:pointer; }
-    .btn-edit { background:#28a745; color:#fff; }
-    .btn-comment { background:#007bff; color:#fff; }
-    .btn-edit:hover { background:#218838; }
-    .btn-comment:hover { background:#0056b3; }
-    /* Adicionado para mostrar mensagens de depuração */
-    #debug { margin-top:1rem; padding:.5rem; border:1px dashed #ccc; display:none; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      background-color: #f0f2f5;
+      color: var(--dark);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .header h1 {
+      color: var(--primary);
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    #status {
+      font-weight: 500;
+      color: var(--gray);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .date-navigator {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .date-btn {
+      background-color: white;
+      border: 1px solid var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--border-radius);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .date-btn:hover {
+      background-color: var(--primary-light);
+      color: white;
+    }
+    
+    .date-btn.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      overflow: hidden;
+    }
+    
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.75rem 1rem;
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-content {
+      padding: 1rem;
+      cursor: pointer;
+    }
+    
+    .card-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .card-field {
+      display: flex;
+      align-items: center;
+    }
+    
+    .field-label {
+      font-weight: 500;
+      color: var(--gray);
+      width: 80px;
+      flex-shrink: 0;
+    }
+    
+    .field-value {
+      flex-grow: 1;
+    }
+    
+    .card-details {
+      display: none;
+      border-top: 1px solid #eee;
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+    
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed #eee;
+    }
+    
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background-color: #3db8db;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .card.expanded .card-details {
+      display: block;
+    }
+    
+    .card.expanded .expand-icon::before {
+      content: '\f077';
+    }
+    
+    .expand-icon::before {
+      content: '\f078';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+      color: var(--gray);
+      margin-bottom: 0.5rem;
+    }
+    
+    .debug-panel {
+      margin-top: 2rem;
+      padding: 1rem;
+      border: 1px dashed #ccc;
+      border-radius: var(--border-radius);
+      display: none;
+      background-color: #f8f9fa;
+    }
+    
+    .debug-panel h3 {
+      color: var(--gray);
+      margin-top: 0;
+      font-size: 1rem;
+    }
+    
+    .debug-content {
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
-  <h1>Painel de Cards</h1>
-  <div id="status">Carregando…</div>
-  <ul id="lista"></ul>
-  <div id="debug"></div>
+  <div class="header">
+    <h1>Painel de Cards</h1>
+  </div>
+  
+  <div id="status">Carregando dados...</div>
+  
+  <div class="date-navigator" id="dateFilter"></div>
+  
+  <div id="cardContainer" class="card-container"></div>
+  
+  <div id="debug" class="debug-panel">
+    <h3>Log de Depuração</h3>
+    <div class="debug-content"></div>
+  </div>
 
   <script>
-    // URL do seu Web App Apps Script - URL ATUALIZADA
+    // URL do Web App Apps Script
     const WEB_APP = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
+    
+    // Armazenar todos os dados originais
+    let allData = [];
+    let availableDates = [];
+    let currentDateFilter = null;
 
     // Mostrar mensagens de depuração
     function debug(message) {
-      const debugDiv = document.getElementById('debug');
-      debugDiv.style.display = 'block';
-      debugDiv.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+      const debugPanel = document.getElementById('debug');
+      const debugContent = debugPanel.querySelector('.debug-content');
+      debugPanel.style.display = 'block';
+      const timestamp = new Date().toLocaleTimeString();
+      debugContent.innerHTML += `<div>${timestamp}: ${message}</div>`;
     }
 
-    // 1) JSONP GET para buscar os dados
+    // Carregar dados da API
     function loadData() {
-      document.getElementById('status').textContent = 'Carregando…';
+      document.getElementById('status').textContent = 'Carregando dados...';
       window.handleData = function(items) {
-        render(items);
-        document.getElementById('status').textContent = `Foram carregados ${items.length} registros.`;
+        allData = items;
+        
+        // Extrair e organizar datas únicas
+        extractDates();
+        
+        // Renderizar botões de filtro de data
+        renderDateFilters();
+        
+        // Se tivermos datas disponíveis, filtramos pela mais recente
+        if (availableDates.length > 0) {
+          filterByDate(availableDates[0]);
+        } else {
+          renderCards(allData);
+        }
+        
+        document.getElementById('status').textContent = `${allData.length} registros carregados.`;
         delete window.handleData;
       };
-      const s = document.createElement('script');
-      s.src = `${WEB_APP}?action=getData&callback=handleData`;
-      document.head.appendChild(s);
+      
+      const script = document.createElement('script');
+      script.src = `${WEB_APP}?action=getData&callback=handleData`;
+      document.head.appendChild(script);
     }
-
-    // 2) Renderiza cada registro como um card
-    function render(items) {
-      const ul = document.getElementById('lista');
-      ul.innerHTML = '';
-      if (!items || items.length === 0) {
-        ul.innerHTML = '<li>Nenhum registro</li>';
+    
+    // Extrair datas únicas dos dados
+    function extractDates() {
+      // Assumindo que há uma coluna de data chamada 'data' ou similar
+      // Ajuste o nome da coluna conforme necessário
+      const dateField = findDateField();
+      
+      if (!dateField) {
+        debug("Nenhum campo de data identificado nos dados");
         return;
       }
+      
+      // Mapa para evitar duplicatas
+      const dateMap = {};
+      
+      allData.forEach(item => {
+        if (item[dateField]) {
+          // Tenta converter para objeto Date
+          let dateValue;
+          try {
+            // Se for string, tenta analisar
+            if (typeof item[dateField] === 'string') {
+              // Tenta diferentes formatos comuns
+              if (item[dateField].includes('/')) {
+                const parts = item[dateField].split('/');
+                // Assumindo formato DD/MM/YYYY ou MM/DD/YYYY
+                if (parts.length === 3) {
+                  // Tentando DD/MM/YYYY primeiro (formato brasileiro comum)
+                  dateValue = new Date(parts[2], parts[1]-1, parts[0]);
+                  
+                  // Se parecer inválido, tenta MM/DD/YYYY
+                  if (isNaN(dateValue.getTime())) {
+                    dateValue = new Date(parts[2], parts[0]-1, parts[1]);
+                  }
+                }
+              } else {
+                // Tenta analisar como ISO ou outro formato reconhecido
+                dateValue = new Date(item[dateField]);
+              }
+            } else if (item[dateField] instanceof Date) {
+              dateValue = item[dateField];
+            }
+            
+            // Se conseguimos uma data válida
+            if (dateValue && !isNaN(dateValue.getTime())) {
+              const month = dateValue.getMonth();
+              const year = dateValue.getFullYear();
+              const key = `${year}-${month}`;
+              
+              if (!dateMap[key]) {
+                dateMap[key] = {
+                  year: year,
+                  month: month,
+                  label: getMonthName(month) + ' ' + year
+                };
+              }
+            }
+          } catch (e) {
+            debug(`Erro ao analisar data: ${e.message}`);
+          }
+        }
+      });
+      
+      // Converte o mapa para array e ordena por data (decrescente)
+      availableDates = Object.values(dateMap).sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+      });
+    }
+    
+    // Tentar identificar qual campo contém datas
+    function findDateField() {
+      if (allData.length === 0) return null;
+      
+      // Lista de possíveis nomes de campos de data
+      const possibleDateFields = ['data', 'date', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
+      
+      // Primeiro, verifica nomes específicos
+      for (const field of possibleDateFields) {
+        if (allData[0].hasOwnProperty(field)) {
+          return field;
+        }
+      }
+      
+      // Se não encontrou pelos nomes conhecidos, procura campos que parecem conter datas
+      for (const key in allData[0]) {
+        const value = allData[0][key];
+        if (value) {
+          // Verifica se parece uma string de data
+          if (typeof value === 'string' && (
+              value.includes('/') || 
+              value.match(/\d{4}-\d{2}-\d{2}/) ||
+              !isNaN(new Date(value).getTime())
+          )) {
+            return key;
+          }
+          
+          // Verifica se é um objeto Date
+          if (value instanceof Date) {
+            return key;
+          }
+        }
+      }
+      
+      return null;
+    }
+    
+    // Obter nome do mês em português
+    function getMonthName(monthIndex) {
+      const months = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      return months[monthIndex];
+    }
+    
+    // Renderizar botões de filtro por data
+    function renderDateFilters() {
+      const filterContainer = document.getElementById('dateFilter');
+      filterContainer.innerHTML = '';
+      
+      if (availableDates.length === 0) {
+        filterContainer.innerHTML = '<div class="date-btn disabled">Sem datas disponíveis</div>';
+        return;
+      }
+      
+      // Adiciona botão "Todos"
+      const allButton = document.createElement('button');
+      allButton.className = 'date-btn' + (currentDateFilter === null ? ' active' : '');
+      allButton.textContent = 'Todos';
+      allButton.onclick = () => filterByDate(null);
+      filterContainer.appendChild(allButton);
+      
+      // Adiciona botões para cada mês/ano
+      availableDates.forEach(dateObj => {
+        const btn = document.createElement('button');
+        btn.className = 'date-btn';
+        if (currentDateFilter && 
+            currentDateFilter.year === dateObj.year && 
+            currentDateFilter.month === dateObj.month) {
+          btn.classList.add('active');
+        }
+        btn.textContent = dateObj.label;
+        btn.onclick = () => filterByDate(dateObj);
+        filterContainer.appendChild(btn);
+      });
+    }
+    
+    // Filtrar cards por data
+    function filterByDate(dateObj) {
+      currentDateFilter = dateObj;
+      
+      // Atualizar botões de filtro
+      const filterButtons = document.querySelectorAll('.date-btn');
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      
+      if (dateObj === null) {
+        // Mostrar todos
+        document.querySelector('.date-btn:first-child').classList.add('active');
+        renderCards(allData);
+        return;
+      }
+      
+      // Encontrar e ativar o botão correto
+      filterButtons.forEach(btn => {
+        if (btn.textContent === dateObj.label) {
+          btn.classList.add('active');
+        }
+      });
+      
+      // Filtrar dados
+      const dateField = findDateField();
+      const filteredData = allData.filter(item => {
+        if (!item[dateField]) return false;
+        
+        let itemDate;
+        try {
+          if (typeof item[dateField] === 'string') {
+            if (item[dateField].includes('/')) {
+              const parts = item[dateField].split('/');
+              if (parts.length === 3) {
+                // Tentando DD/MM/YYYY primeiro
+                itemDate = new Date(parts[2], parts[1]-1, parts[0]);
+                if (isNaN(itemDate.getTime())) {
+                  // Tenta MM/DD/YYYY
+                  itemDate = new Date(parts[2], parts[0]-1, parts[1]);
+                }
+              }
+            } else {
+              itemDate = new Date(item[dateField]);
+            }
+          } else if (item[dateField] instanceof Date) {
+            itemDate = item[dateField];
+          }
+          
+          return itemDate && 
+                 itemDate.getMonth() === dateObj.month && 
+                 itemDate.getFullYear() === dateObj.year;
+        } catch (e) {
+          return false;
+        }
+      });
+      
+      renderCards(filteredData);
+    }
+
+    // Renderizar cards com os dados
+    function renderCards(items) {
+      const container = document.getElementById('cardContainer');
+      container.innerHTML = '';
+      
+      if (!items || items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <h3>Nenhum registro encontrado</h3>
+            <p>Tente selecionar outro período ou verifique os dados.</p>
+          </div>
+        `;
+        return;
+      }
+      
       items.forEach(item => {
-        const li = document.createElement('li');
-
-        // Texto principal (exclui campos internos)
-        const txt = document.createElement('div');
-        txt.className = 'text-item';
-        txt.textContent = Object.entries(item)
-          .filter(([k])=>!['_row','comments','commentCount'].includes(k))
-          .map(([k,v])=>`${k}: ${v}`)
-          .join(' │ ');
-
-        // Botão para editar I
-        const btnEdit = document.createElement('button');
-        btnEdit.className = 'btn btn-edit';
-        btnEdit.textContent = `I: ${item.I||''}`;
-        btnEdit.onclick = () => {
-          const novo = prompt('Valor para coluna I:', item.I||'');
+        // Determinar quais colunas mostrar no preview (1º, 2º, 5º e 8º)
+        const allColumns = Object.entries(item)
+          .filter(([key]) => !['_row', 'comments', 'commentCount'].includes(key));
+        
+        // Pegamos a 1ª, 2ª, 5ª e 8ª colunas (ajustando para índices 0-based)
+        const previewColumns = [
+          allColumns[0],  // 1º
+          allColumns[1],  // 2º
+          allColumns.length >= 5 ? allColumns[4] : null,  // 5º
+          allColumns.length >= 8 ? allColumns[7] : null,  // 8º
+        ].filter(Boolean); // Remove itens nulos
+        
+        // Criar card
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        // Header do card (usamos a primeira coluna como título)
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        cardHeader.innerHTML = `
+          <div>${previewColumns[0] ? previewColumns[0][1] : ''}</div>
+          <span class="expand-icon"></span>
+        `;
+        
+        // Preview do card (colunas selecionadas)
+        const cardContent = document.createElement('div');
+        cardContent.className = 'card-content';
+        cardContent.innerHTML = `
+          <div class="card-preview">
+            ${previewColumns.slice(1).map(([key, value]) => `
+              <div class="card-field">
+                <div class="field-label">${key}:</div>
+                <div class="field-value">${value || ''}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="card-details">
+            ${allColumns.map(([key, value], index) => {
+              // Pula os que já estão no preview
+              if (previewColumns.some(col => col[0] === key)) return '';
+              return `
+                <div class="card-field">
+                  <div class="field-label">${key}:</div>
+                  <div class="field-value">${value || ''}</div>
+                </div>
+              `;
+            }).join('')}
+            <div class="card-actions">
+              <button class="btn btn-success btn-evaluate" data-row="${item._row}" data-value="${item.I || ''}">
+                <i class="fas fa-star"></i> Avalie
+              </button>
+              <button class="btn btn-primary btn-comment" data-row="${item._row}" data-count="${item.commentCount || 0}">
+                <i class="fas fa-comment"></i> Comentários (${item.commentCount || 0})
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Evento de clique para expandir/colapsar
+        cardContent.addEventListener('click', (e) => {
+          // Ignora cliques nos botões
+          if (e.target.closest('.btn')) return;
+          
+          card.classList.toggle('expanded');
+        });
+        
+        card.appendChild(cardHeader);
+        card.appendChild(cardContent);
+        container.appendChild(card);
+      });
+      
+      // Adicionar eventos aos botões após renderizar todos os cards
+      addButtonEvents();
+    }
+    
+    // Adicionar eventos aos botões
+    function addButtonEvents() {
+      // Botões "Avalie"
+      document.querySelectorAll('.btn-evaluate').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const row = btn.dataset.row;
+          const currentValue = btn.dataset.value;
+          
+          const novo = prompt('Avaliação:', currentValue || '');
           if (novo === null) return;
           
-          debug(`Enviando atualização para linha ${item._row}, valor: ${novo}`);
+          debug(`Enviando avaliação para linha ${row}, valor: ${novo}`);
           
           // Dados a serem enviados
           const data = {
             action: 'updateI',
-            row: item._row,
+            row: row,
             value: novo
           };
           
@@ -97,32 +620,38 @@
             body: JSON.stringify(data)
           })
           .then(response => {
-            debug(`Resposta recebida para atualização`);
+            debug(`Resposta recebida para avaliação`);
             setTimeout(loadData, 1000); // Recarregar após 1 segundo
           })
           .catch(error => {
             debug(`Erro ao atualizar: ${error}`);
           });
-        };
-
-        // Botão para comentários
-        const btnC = document.createElement('button');
-        btnC.className = 'btn btn-comment';
-        btnC.textContent = `Comentários (${item.commentCount||0})`;
-        btnC.onclick = () => {
+        });
+      });
+      
+      // Botões "Comentários"
+      document.querySelectorAll('.btn-comment').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const row = btn.dataset.row;
+          
+          // Buscar comentários existentes do item correspondente
+          const item = allData.find(i => i._row == row);
           const antigas = Array.isArray(item.comments) ? item.comments.join('\n') : '';
+          
           const msg = antigas
-            ? `Comentários anteriores:\n${antigas}\n\nNovo:`
+            ? `Comentários anteriores:\n${antigas}\n\nNovo comentário:`
             : 'Digite seu comentário:';
+            
           const novo = prompt(msg);
           if (!novo) return;
           
-          debug(`Enviando comentário para linha ${item._row}: ${novo}`);
+          debug(`Enviando comentário para linha ${row}: ${novo}`);
           
           // Dados a serem enviados
           const data = {
             action: 'addComment',
-            row: item._row,
+            row: row,
             comment: novo
           };
           
@@ -140,10 +669,7 @@
           .catch(error => {
             debug(`Erro ao adicionar comentário: ${error}`);
           });
-        };
-
-        li.append(txt, btnEdit, btnC);
-        ul.appendChild(li);
+        });
       });
     }
 
