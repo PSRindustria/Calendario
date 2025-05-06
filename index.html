@@ -103,6 +103,24 @@
       align-items: center;
     }
     
+    .card.status-aprovado .card-header {
+      background-color: #28a745;
+    }
+    
+    .card.status-reprovado .card-header {
+      background-color: #dc3545;
+    }
+    
+    .card.status-pendente .card-header {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    
+    .social-icon {
+      margin-left: 8px;
+      font-size: 18px;
+    }
+    
     .card-content {
       padding: 1rem;
       cursor: pointer;
@@ -327,6 +345,10 @@
                   if (isNaN(dateValue.getTime())) {
                     dateValue = new Date(parts[2], parts[0]-1, parts[1]);
                   }
+                } else if (parts.length === 2) {
+                  // Formato DD/MM (sem ano)
+                  const currentYear = new Date().getFullYear();
+                  dateValue = new Date(currentYear, parts[1]-1, parts[0]);
                 }
               } else {
                 // Tenta analisar como ISO ou outro formato reconhecido
@@ -356,10 +378,20 @@
         }
       });
       
-      // Converte o mapa para array e ordena por data (decrescente)
+      // Converte o mapa para array e ordena por data (crescente)
+      // Pegamos o mês atual para garantir que ele apareça primeiro
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      
       availableDates = Object.values(dateMap).sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        return b.month - a.month;
+        // Coloca o mês atual primeiro
+        if (a.month === currentMonth && a.year === currentYear) return -1;
+        if (b.month === currentMonth && b.year === currentYear) return 1;
+        
+        // Depois ordena em ordem crescente (mais antigo primeiro)
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month;
       });
     }
     
@@ -452,7 +484,21 @@
       if (dateObj === null) {
         // Mostrar todos
         document.querySelector('.date-btn:first-child').classList.add('active');
-        renderCards(allData);
+        
+        // Ordenar por data crescente antes de renderizar
+        const dateField = findDateField();
+        const sortedData = [...allData].sort((a, b) => {
+          const dateA = parseDate(a[dateField]);
+          const dateB = parseDate(b[dateField]);
+          
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1;
+          if (!dateB) return -1;
+          
+          return dateA - dateB; // Ordem crescente
+        });
+        
+        renderCards(sortedData);
         return;
       }
       
@@ -468,35 +514,59 @@
       const filteredData = allData.filter(item => {
         if (!item[dateField]) return false;
         
-        let itemDate;
-        try {
-          if (typeof item[dateField] === 'string') {
-            if (item[dateField].includes('/')) {
-              const parts = item[dateField].split('/');
-              if (parts.length === 3) {
-                // Tentando DD/MM/YYYY primeiro
-                itemDate = new Date(parts[2], parts[1]-1, parts[0]);
-                if (isNaN(itemDate.getTime())) {
-                  // Tenta MM/DD/YYYY
-                  itemDate = new Date(parts[2], parts[0]-1, parts[1]);
-                }
-              }
-            } else {
-              itemDate = new Date(item[dateField]);
-            }
-          } else if (item[dateField] instanceof Date) {
-            itemDate = item[dateField];
-          }
-          
-          return itemDate && 
-                 itemDate.getMonth() === dateObj.month && 
-                 itemDate.getFullYear() === dateObj.year;
-        } catch (e) {
-          return false;
-        }
+        let itemDate = parseDate(item[dateField]);
+        
+        return itemDate && 
+               itemDate.getMonth() === dateObj.month && 
+               itemDate.getFullYear() === dateObj.year;
+      });
+      
+      // Ordenar por data crescente
+      filteredData.sort((a, b) => {
+        const dateA = parseDate(a[dateField]);
+        const dateB = parseDate(b[dateField]);
+        
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        
+        return dateA - dateB; // Ordem crescente
       });
       
       renderCards(filteredData);
+    }
+    
+    // Função auxiliar para analisar datas em vários formatos
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      
+      try {
+        // Se já for um objeto Date
+        if (dateStr instanceof Date) return dateStr;
+        
+        // Se for string, verifica o formato
+        if (typeof dateStr === 'string') {
+          // Formato DD/MM ou DD/MM/AAAA
+          if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+              // DD/MM/AAAA
+              return new Date(parts[2], parts[1]-1, parts[0]);
+            } else if (parts.length === 2) {
+              // DD/MM (assumindo ano atual)
+              const currentYear = new Date().getFullYear();
+              return new Date(currentYear, parts[1]-1, parts[0]);
+            }
+          } else {
+            // Outros formatos
+            return new Date(dateStr);
+          }
+        }
+      } catch (e) {
+        debug(`Erro ao analisar data: ${dateStr}`);
+      }
+      
+      return null;
     }
 
     // Renderizar cards com os dados
@@ -528,17 +598,89 @@
           allColumns.length >= 8 ? allColumns[7] : null,  // 8º
         ].filter(Boolean); // Remove itens nulos
         
+        // Verificar status para aplicar cores
+        const statusField = findStatusField(item);
+        let statusClass = '';
+        if (statusField) {
+          const statusValue = item[statusField].toString().toLowerCase();
+          if (statusValue.includes('aprovado')) {
+            statusClass = 'status-aprovado';
+          } else if (statusValue.includes('reprovado')) {
+            statusClass = 'status-reprovado';
+          } else if (statusValue.includes('pendente')) {
+            statusClass = 'status-pendente';
+          }
+        }
+        
+        // Encontrar o campo de plataforma social
+        const platformField = findPlatformField(item);
+        let socialIcon = '';
+        if (platformField) {
+          const platform = item[platformField].toString().toLowerCase();
+          if (platform.includes('instagram')) {
+            socialIcon = '<i class="fab fa-instagram social-icon"></i>';
+          } else if (platform.includes('linkedin')) {
+            socialIcon = '<i class="fab fa-linkedin social-icon"></i>';
+          } else if (platform.includes('facebook')) {
+            socialIcon = '<i class="fab fa-facebook social-icon"></i>';
+          } else if (platform.includes('youtube')) {
+            socialIcon = '<i class="fab fa-youtube social-icon"></i>';
+          } else if (platform.includes('tiktok')) {
+            socialIcon = '<i class="fab fa-tiktok social-icon"></i>';
+          }
+        }
+        
         // Criar card
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = `card ${statusClass}`;
+        card.setAttribute('data-card-id', item._row); // ID único para o card
         
         // Header do card (usamos a primeira coluna como título)
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
         cardHeader.innerHTML = `
-          <div>${previewColumns[0] ? previewColumns[0][1] : ''}</div>
+          <div>${previewColumns[0] ? previewColumns[0][1] : ''}${socialIcon}</div>
           <span class="expand-icon"></span>
         `;
+        
+        // Formatar datas no formato DD/MM (formato brasileiro)
+        function formatDateValue(key, value) {
+          // Verifica se é um campo de data
+          const dateField = findDateField();
+          if (key === dateField && value) {
+            try {
+              const dateObj = parseDate(value);
+              if (dateObj) {
+                // Formata como DD/MM
+                const day = dateObj.getDate().toString().padStart(2, '0');
+                const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                return `${day}/${month}`;
+              }
+            } catch (e) {
+              // Se falhar a formatação, retorna o valor original
+            }
+          }
+          return value || '';
+        }
+        
+        // Criar links para URLs
+        function formatFieldValue(key, value) {
+          if (!value) return '';
+          
+          // Verifica se é uma URL do Google Drive ou outra URL
+          if (typeof value === 'string' && 
+              (value.includes('drive.google.com') || 
+               value.includes('http://') || 
+               value.includes('https://'))) {
+            return `<a href="${value}" target="_blank" class="link-field">
+                     ${value.length > 30 ? value.substring(0, 30) + '...' : value}
+                     <i class="fas fa-external-link-alt"></i>
+                   </a>`;
+          }
+          
+          // Formata datas se for um campo de data
+          return formatDateValue(key, value);
+        }
         
         // Preview do card (colunas selecionadas)
         const cardContent = document.createElement('div');
@@ -548,7 +690,7 @@
             ${previewColumns.slice(1).map(([key, value]) => `
               <div class="card-field">
                 <div class="field-label">${key}:</div>
-                <div class="field-value">${value || ''}</div>
+                <div class="field-value">${formatFieldValue(key, value)}</div>
               </div>
             `).join('')}
           </div>
@@ -559,7 +701,7 @@
               return `
                 <div class="card-field">
                   <div class="field-label">${key}:</div>
-                  <div class="field-value">${value || ''}</div>
+                  <div class="field-value">${formatFieldValue(key, value)}</div>
                 </div>
               `;
             }).join('')}
@@ -574,11 +716,19 @@
           </div>
         `;
         
-        // Evento de clique para expandir/colapsar
+        // Evento de clique para expandir/colapsar apenas este card
         cardContent.addEventListener('click', (e) => {
-          // Ignora cliques nos botões
-          if (e.target.closest('.btn')) return;
+          // Ignora cliques nos botões e links
+          if (e.target.closest('.btn') || e.target.closest('a')) return;
           
+          // Fecha todos os outros cards
+          document.querySelectorAll('.card.expanded').forEach(expandedCard => {
+            if (expandedCard.getAttribute('data-card-id') !== item._row.toString()) {
+              expandedCard.classList.remove('expanded');
+            }
+          });
+          
+          // Alterna o estado deste card
           card.classList.toggle('expanded');
         });
         
@@ -589,6 +739,58 @@
       
       // Adicionar eventos aos botões após renderizar todos os cards
       addButtonEvents();
+    }
+    
+    // Função para tentar encontrar um campo de status
+    function findStatusField(item) {
+      const possibleFields = ['status', 'Status', 'situacao', 'Situacao', 'Situação', 'situação', 'aprovacao', 'Aprovacao'];
+      
+      for (const field of possibleFields) {
+        if (item[field] !== undefined) {
+          return field;
+        }
+      }
+      
+      // Procura por qualquer campo que tenha valores que indiquem status
+      for (const [key, value] of Object.entries(item)) {
+        if (value && typeof value === 'string') {
+          const lowerValue = value.toLowerCase();
+          if (lowerValue.includes('aprovado') || 
+              lowerValue.includes('reprovado') || 
+              lowerValue.includes('pendente')) {
+            return key;
+          }
+        }
+      }
+      
+      return null;
+    }
+    
+    // Função para tentar encontrar um campo de plataforma
+    function findPlatformField(item) {
+      const possibleFields = ['plataforma', 'Plataforma', 'platform', 'Platform', 'rede', 'Rede', 'redeSocial', 'RedeSocial'];
+      
+      for (const field of possibleFields) {
+        if (item[field] !== undefined) {
+          return field;
+        }
+      }
+      
+      // Procura por qualquer campo que mencione redes sociais
+      for (const [key, value] of Object.entries(item)) {
+        if (value && typeof value === 'string') {
+          const lowerValue = value.toLowerCase();
+          if (lowerValue.includes('instagram') || 
+              lowerValue.includes('facebook') || 
+              lowerValue.includes('linkedin') || 
+              lowerValue.includes('youtube') || 
+              lowerValue.includes('tiktok')) {
+            return key;
+          }
+        }
+      }
+      
+      return null;
     }
     
     // Adicionar eventos aos botões
