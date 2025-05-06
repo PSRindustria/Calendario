@@ -2,23 +2,24 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <base target="_top">
   <title>Painel de Cards</title>
   <style>
-    body { font-family: sans-serif; padding:1rem; max-width:600px; margin:auto;}
-    #status { margin-bottom:1rem; font-weight:bold;}
-    ul { list-style:none; padding:0;}
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
+    #status { font-weight: bold; margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
     li {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:.5rem; border:1px solid #ccc; border-radius:4px; margin-bottom:.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .5rem; border: 1px solid #ccc; border-radius: 4px;
+      margin-bottom: .5rem;
     }
-    li:hover { background:#f5f5f5;}
-    .text-item { cursor:pointer; flex:1; }
-    .btn-comment {
-      margin-left:.5rem; padding:.25rem .5rem; border:none;
-      background:#007bff; color:#fff; border-radius:3px; cursor:pointer;
-    }
-    .btn-comment:hover { background:#0056b3; }
+    li:hover { background: #f5f5f5; }
+    .text-item { flex:1; cursor: pointer; }
+    .btn { margin-left: .5rem; padding: .25rem .5rem; border: none;
+           border-radius: 3px; cursor: pointer; }
+    .btn-edit { background: #28a745; color: #fff; }
+    .btn-comment { background: #007bff; color: #fff; }
+    .btn-edit:hover { background: #218838; }
+    .btn-comment:hover { background: #0056b3; }
   </style>
 </head>
 <body>
@@ -27,114 +28,85 @@
   <ul id="lista"></ul>
 
   <script>
-    /**
-     * 1) Puxa os dados via Apps Script
-     */
-    function loadData() {
-      const status = document.getElementById('status');
-      status.textContent = 'Carregando…';
-      console.log('> chamando getData()');
+    const BASE_URL = 'https://agenda-portal-2d149-default-rtdb.firebaseio.com/sheets/data';
 
-      google.script.run
-        .withSuccessHandler(render)
-        .withFailureHandler(err => {
-          status.textContent = 'Erro ao carregar: ' + err.message;
-          console.error('💥 getData falhou:', err);
-        })
-        .getData();
+    async function loadData() {
+      document.getElementById('status').textContent = 'Carregando…';
+      try {
+        const res = await fetch(BASE_URL + '.json');
+        if(!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+        render(Array.isArray(data) ? data : []);
+        document.getElementById('status').textContent = `Foram carregados ${data.length} registros.`;
+      } catch(err) {
+        document.getElementById('status').textContent = 'Erro: ' + err.message;
+      }
     }
 
-    /**
-     * 2) Renderiza lista de cards
-     */
     function render(items) {
-      console.log('✅ render recebeu:', items);
-      const lista = document.getElementById('lista');
-      const status = document.getElementById('status');
-      lista.innerHTML = '';
-
-      if (!items || items.length === 0) {
-        lista.innerHTML = '<li>Nenhum registro</li>';
-        status.textContent = '';
+      const ul = document.getElementById('lista');
+      ul.innerHTML = '';
+      if (!items.length) {
+        ul.innerHTML = '<li>Nenhum registro</li>';
         return;
       }
-
-      items.forEach(item => {
+      items.forEach((item, idx) => {
         const li = document.createElement('li');
-
-        // texto (excluindo _row, comments, commentCount)
-        const txt = document.createElement('div');
-        txt.className = 'text-item';
-        const display = Object.entries(item)
-          .filter(([k]) => !['_row','comments','commentCount'].includes(k))
+        // Texto
+        const div = document.createElement('div');
+        div.className = 'text-item';
+        div.textContent = Object.entries(item)
+          .filter(([k]) => !['comments','commentCount','I'].includes(k))
           .map(([k,v]) => `${k}: ${v}`)
           .join(' │ ');
-        txt.textContent = display;
-        txt.title = 'Clique para editar Coluna I';
+        // Botão editar I
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn btn-edit';
+        btnEdit.textContent = `I: ${item.I||''}`;
+        btnEdit.onclick = async () => {
+          const novo = prompt('Novo valor para I:', item.I||'');
+          if (novo === null) return;
+          await fetch(`${BASE_URL}/${idx}/I.json`, {
+            method: 'PUT',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(novo)
+          });
+          item.I = novo;
+          btnEdit.textContent = `I: ${novo}`;
+        };
+        // Botão comentários
+        const btnC = document.createElement('button');
+        btnC.className = 'btn btn-comment';
+        btnC.textContent = `Comentários (${item.commentCount||0})`;
+        btnC.onclick = async () => {
+          const anteriores = Array.isArray(item.comments) ? item.comments.join('\n') : '';
+          const novo = prompt(
+            anteriores 
+              ? `Comentários anteriores:\n${anteriores}\n\nNovo:` 
+              : 'Seu comentário:'
+          );
+          if (!novo) return;
+          const lista = Array.isArray(item.comments) 
+            ? [...item.comments, novo] 
+            : [novo];
+          await fetch(`${BASE_URL}/${idx}.json`, {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              comments: lista,
+              commentCount: lista.length
+            })
+          });
+          item.comments = lista;
+          item.commentCount = lista.length;
+          btnC.textContent = `Comentários (${lista.length})`;
+        };
 
-        // botão comentários
-        const btn = document.createElement('button');
-        btn.className = 'btn-comment';
-        btn.textContent = `Comentários (${item.commentCount||0})`;
-
-        // editar coluna I
-        txt.addEventListener('click', () => {
-          const atual = item.I||'';
-          const novo = prompt('Valor para coluna I:', atual);
-          if (novo !== null) {
-            console.log(`> updateColumnI linha=${item._row} valor=${novo}`);
-            google.script.run
-              .withSuccessHandler(() => {
-                item.I = novo;
-                txt.textContent = Object.entries(item)
-                  .filter(([k])=>!['_row','comments','commentCount'].includes(k))
-                  .map(([k,v])=>`${k}: ${v}`)
-                  .join(' │ ');
-                status.textContent = 'Coluna I atualizada!';
-              })
-              .withFailureHandler(err => {
-                status.textContent = 'Erro ao atualizar I: ' + err.message;
-                console.error('💥 updateColumnI falhou:', err);
-              })
-              .updateColumnI(item._row, novo);
-          }
-        });
-
-        // adicionar comentário
-        btn.addEventListener('click', () => {
-          const anteriores = item.comments || '';
-          const msg = anteriores
-            ? `Comentários anteriores:\n${anteriores}\n\nNovo comentário:`
-            : 'Digite seu comentário:';
-          const novo = prompt(msg);
-          if (novo && novo.trim()) {
-            console.log(`> addComment linha=${item._row} texto=${novo}`);
-            google.script.run
-              .withSuccessHandler(() => {
-                item.comments = anteriores
-                  ? anteriores + '\n' + novo.trim()
-                  : novo.trim();
-                item.commentCount = (item.commentCount||0) + 1;
-                btn.textContent = `Comentários (${item.commentCount})`;
-                status.textContent = 'Comentário salvo!';
-              })
-              .withFailureHandler(err => {
-                status.textContent = 'Erro ao salvar comentário: ' + err.message;
-                console.error('💥 addComment falhou:', err);
-              })
-              .addComment(item._row, novo.trim());
-          }
-        });
-
-        li.appendChild(txt);
-        li.appendChild(btn);
-        lista.appendChild(li);
+        li.append(div, btnEdit, btnC);
+        ul.appendChild(li);
       });
-
-      status.textContent = `Foram carregados ${items.length} registros.`;
     }
 
-    // dispara ao carregar a página
     window.onload = loadData;
   </script>
 </body>
