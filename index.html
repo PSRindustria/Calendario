@@ -104,15 +104,15 @@
     }
     
     .card.status-aprovado .card-header {
-      background-color: #28a745; /* Verde para aprovado */
+      background-color: #28a745;
     }
     
     .card.status-reprovado .card-header {
-      background-color: #dc3545; /* Vermelho para reprovado */
+      background-color: #dc3545;
     }
     
     .card.status-pendente .card-header {
-      background-color: #ffc107; /* Amarelo para pendente */
+      background-color: #ffc107;
       color: #212529;
     }
     
@@ -124,6 +124,7 @@
     
     .social-icon {
       font-size: 18px;
+      margin-right: 6px;
     }
     
     .card-content {
@@ -178,7 +179,7 @@
     
     .card-actions {
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
       gap: 0.5rem;
       margin-top: 1rem;
       padding-top: 0.5rem;
@@ -288,15 +289,12 @@
   </div>
 
   <script>
-    // URL do Web App Apps Script
     const WEB_APP = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
     
-    // Armazenar todos os dados originais
     let allData = [];
     let availableDates = [];
     let currentDateFilter = null;
 
-    // Mostrar mensagens de depuração
     function debug(message) {
       const debugPanel = document.getElementById('debug');
       const debugContent = debugPanel.querySelector('.debug-content');
@@ -305,19 +303,15 @@
       debugContent.innerHTML += `<div>${timestamp}: ${message}</div>`;
     }
 
-    // Carregar dados da API
     function loadData() {
       document.getElementById('status').textContent = 'Carregando dados...';
       window.handleData = function(items) {
         allData = items;
         
-        // Extrair e organizar datas únicas
         extractDates();
         
-        // Renderizar botões de filtro de data
         renderDateFilters();
         
-        // Se tivermos datas disponíveis, filtramos pela mais recente
         if (availableDates.length > 0) {
           filterByDate(availableDates[0]);
         } else {
@@ -333,10 +327,7 @@
       document.head.appendChild(script);
     }
     
-    // Extrair datas únicas dos dados
     function extractDates() {
-      // Assumindo que há uma coluna de data chamada 'data' ou similar
-      // Ajuste o nome da coluna conforme necessário
       const dateField = findDateField();
       
       if (!dateField) {
@@ -344,42 +335,32 @@
         return;
       }
       
-      // Mapa para evitar duplicatas
       const dateMap = {};
       
       allData.forEach(item => {
         if (item[dateField]) {
-          // Tenta converter para objeto Date
           let dateValue;
           try {
-            // Se for string, tenta analisar
             if (typeof item[dateField] === 'string') {
-              // Tenta diferentes formatos comuns
               if (item[dateField].includes('/')) {
                 const parts = item[dateField].split('/');
-                // Assumindo formato DD/MM/YYYY ou MM/DD/YYYY
                 if (parts.length === 3) {
-                  // Tentando DD/MM/YYYY primeiro (formato brasileiro comum)
                   dateValue = new Date(parts[2], parts[1]-1, parts[0]);
                   
-                  // Se parecer inválido, tenta MM/DD/YYYY
                   if (isNaN(dateValue.getTime())) {
                     dateValue = new Date(parts[2], parts[0]-1, parts[1]);
                   }
                 } else if (parts.length === 2) {
-                  // Formato DD/MM (sem ano)
                   const currentYear = new Date().getFullYear();
                   dateValue = new Date(currentYear, parts[1]-1, parts[0]);
                 }
               } else {
-                // Tenta analisar como ISO ou outro formato reconhecido
                 dateValue = new Date(item[dateField]);
               }
             } else if (item[dateField] instanceof Date) {
               dateValue = item[dateField];
             }
             
-            // Se conseguimos uma data válida
             if (dateValue && !isNaN(dateValue.getTime())) {
               const month = dateValue.getMonth();
               const year = dateValue.getFullYear();
@@ -399,42 +380,33 @@
         }
       });
       
-      // Converte o mapa para array e ordena por data
-      // Pegamos o mês atual para garantir que ele apareça primeiro
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
       
       availableDates = Object.values(dateMap).sort((a, b) => {
-        // Coloca o mês atual primeiro
         if (a.month === currentMonth && a.year === currentYear) return -1;
         if (b.month === currentMonth && b.year === currentYear) return 1;
         
-        // Depois ordena em ordem crescente (mais antigo primeiro)
         if (a.year !== b.year) return a.year - b.year;
         return a.month - b.month;
       });
     }
     
-    // Tentar identificar qual campo contém datas
     function findDateField() {
       if (allData.length === 0) return null;
       
-      // Lista de possíveis nomes de campos de data
       const possibleDateFields = ['data', 'date', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
       
-      // Primeiro, verifica nomes específicos
       for (const field of possibleDateFields) {
         if (allData[0].hasOwnProperty(field)) {
           return field;
         }
       }
       
-      // Se não encontrou pelos nomes conhecidos, procura campos que parecem conter datas
       for (const key in allData[0]) {
         const value = allData[0][key];
         if (value) {
-          // Verifica se parece uma string de data
           if (typeof value === 'string' && (
               value.includes('/') || 
               value.match(/\d{4}-\d{2}-\d{2}/) ||
@@ -443,7 +415,6 @@
             return key;
           }
           
-          // Verifica se é um objeto Date
           if (value instanceof Date) {
             return key;
           }
@@ -453,7 +424,6 @@
       return null;
     }
     
-    // Obter nome do mês em português
     function getMonthName(monthIndex) {
       const months = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -462,7 +432,6 @@
       return months[monthIndex];
     }
     
-    // Renderizar botões de filtro por data
     function renderDateFilters() {
       const filterContainer = document.getElementById('dateFilter');
       filterContainer.innerHTML = '';
@@ -472,14 +441,12 @@
         return;
       }
       
-      // Adiciona botão "Todos"
       const allButton = document.createElement('button');
       allButton.className = 'date-btn' + (currentDateFilter === null ? ' active' : '');
       allButton.textContent = 'Todos';
       allButton.onclick = () => filterByDate(null);
       filterContainer.appendChild(allButton);
       
-      // Adiciona botões para cada mês/ano
       availableDates.forEach(dateObj => {
         const btn = document.createElement('button');
         btn.className = 'date-btn';
@@ -494,19 +461,15 @@
       });
     }
     
-    // Filtrar cards por data
     function filterByDate(dateObj) {
       currentDateFilter = dateObj;
       
-      // Atualizar botões de filtro
       const filterButtons = document.querySelectorAll('.date-btn');
       filterButtons.forEach(btn => btn.classList.remove('active'));
       
       if (dateObj === null) {
-        // Mostrar todos
         document.querySelector('.date-btn:first-child').classList.add('active');
         
-        // Ordenar por data crescente antes de renderizar
         const dateField = findDateField();
         const sortedData = [...allData].sort((a, b) => {
           const dateA = parseDate(a[dateField]);
@@ -516,21 +479,19 @@
           if (!dateA) return 1;
           if (!dateB) return -1;
           
-          return dateA - dateB; // Ordem crescente
+          return dateA - dateB;
         });
         
         renderCards(sortedData);
         return;
       }
       
-      // Encontrar e ativar o botão correto
       filterButtons.forEach(btn => {
         if (btn.textContent === dateObj.label) {
           btn.classList.add('active');
         }
       });
       
-      // Filtrar dados
       const dateField = findDateField();
       const filteredData = allData.filter(item => {
         if (!item[dateField]) return false;
@@ -542,7 +503,6 @@
                itemDate.getFullYear() === dateObj.year;
       });
       
-      // Ordenar por data crescente
       filteredData.sort((a, b) => {
         const dateA = parseDate(a[dateField]);
         const dateB = parseDate(b[dateField]);
@@ -551,35 +511,28 @@
         if (!dateA) return 1;
         if (!dateB) return -1;
         
-        return dateA - dateB; // Ordem crescente
+        return dateA - dateB;
       });
       
       renderCards(filteredData);
     }
     
-    // Função auxiliar para analisar datas em vários formatos
     function parseDate(dateStr) {
       if (!dateStr) return null;
       
       try {
-        // Se já for um objeto Date
         if (dateStr instanceof Date) return dateStr;
         
-        // Se for string, verifica o formato
         if (typeof dateStr === 'string') {
-          // Formato DD/MM ou DD/MM/AAAA
           if (dateStr.includes('/')) {
             const parts = dateStr.split('/');
             if (parts.length === 3) {
-              // DD/MM/AAAA
               return new Date(parts[2], parts[1]-1, parts[0]);
             } else if (parts.length === 2) {
-              // DD/MM (assumindo ano atual)
               const currentYear = new Date().getFullYear();
               return new Date(currentYear, parts[1]-1, parts[0]);
             }
           } else {
-            // Outros formatos
             return new Date(dateStr);
           }
         }
@@ -590,7 +543,6 @@
       return null;
     }
 
-    // Renderizar cards com os dados
     function renderCards(items) {
       const container = document.getElementById('cardContainer');
       container.innerHTML = '';
@@ -607,19 +559,16 @@
       }
       
       items.forEach(item => {
-        // Determinar quais colunas mostrar no preview (1º, 2º, 5º e 8º)
         const allColumns = Object.entries(item)
           .filter(([key]) => !['_row', 'comments', 'commentCount'].includes(key));
         
-        // Pegamos a 1ª, 2ª, 5ª e 8ª colunas (ajustando para índices 0-based)
         const previewColumns = [
-          allColumns[0],  // 1º
-          allColumns[1],  // 2º
-          allColumns.length >= 5 ? allColumns[4] : null,  // 5º
-          allColumns.length >= 8 ? allColumns[7] : null,  // 8º
-        ].filter(Boolean); // Remove itens nulos
+          allColumns[0],
+          allColumns[1],
+          allColumns.length >= 5 ? allColumns[4] : null,
+          allColumns.length >= 8 ? allColumns[7] : null,
+        ].filter(Boolean);
         
-        // Verificar status para aplicar cores
         const statusField = findStatusField(item);
         let statusClass = '';
         if (statusField) {
@@ -633,7 +582,6 @@
           }
         }
         
-        // Encontrar o campo de plataforma social
         const platformField = findPlatformField(item);
         let socialIcon = '';
         if (platformField) {
@@ -651,44 +599,36 @@
           }
         }
         
-        // Criar card
         const card = document.createElement('div');
         card.className = `card ${statusClass}`;
-        card.setAttribute('data-card-id', item._row); // ID único para o card
+        card.setAttribute('data-card-id', item._row);
         
-        // Header do card (usamos a primeira coluna como título)
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
         cardHeader.innerHTML = `
-          <div class="card-title">${previewColumns[0] ? previewColumns[0][1] : ''}${socialIcon}</div>
+          <div class="card-title">${socialIcon}${previewColumns[0] ? previewColumns[0][1] : ''}</div>
           <span class="expand-icon"></span>
         `;
         
-        // Formatar datas no formato DD/MM (formato brasileiro)
         function formatDateValue(key, value) {
-          // Verifica se é um campo de data
           const dateField = findDateField();
           if (key === dateField && value) {
             try {
               const dateObj = parseDate(value);
               if (dateObj) {
-                // Formata como DD/MM
                 const day = dateObj.getDate().toString().padStart(2, '0');
                 const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
                 return `${day}/${month}`;
               }
             } catch (e) {
-              // Se falhar a formatação, retorna o valor original
             }
           }
           return value || '';
         }
         
-        // Criar links para URLs
         function formatFieldValue(key, value) {
           if (!value) return '';
           
-          // Verifica se é uma URL do Google Drive ou outra URL
           if (typeof value === 'string' && 
               (value.includes('drive.google.com') || 
                value.includes('http://') || 
@@ -699,11 +639,9 @@
                    </a>`;
           }
           
-          // Formata datas se for um campo de data
           return formatDateValue(key, value);
         }
         
-        // Preview do card (colunas selecionadas)
         const cardContent = document.createElement('div');
         cardContent.className = 'card-content';
         cardContent.innerHTML = `
@@ -717,7 +655,6 @@
           </div>
           <div class="card-details">
             ${allColumns.map(([key, value], index) => {
-              // Pula os que já estão no preview
               if (previewColumns.some(col => col[0] === key)) return '';
               return `
                 <div class="card-field">
@@ -728,26 +665,18 @@
             }).join('')}
             <div class="card-actions">
               <button class="btn btn-success btn-evaluate" data-row="${item._row}" data-value="${item.I || ''}">
-                <i class="fas fa-star"></i> Avalie
+                <i class="fas fa-star"></i> Aprovação
               </button>
               <button class="btn btn-primary btn-comment" data-row="${item._row}" data-count="${item.commentCount || 0}">
-                <i class="fas fa-comment"></i> Comentários (${item.commentCount || 0})
+                <i class="fas fa-comment"></i> Comentar
               </button>
             </div>
           </div>
         `;
         
-        // Evento de clique para expandir/colapsar apenas este card
         cardContent.addEventListener('click', (e) => {
-          // Ignora cliques nos botões e links
           if (e.target.closest('.btn') || e.target.closest('a')) return;
           
-          // Fecha todos os cards
-          document.querySelectorAll('.card.expanded').forEach(expandedCard => {
-            expandedCard.classList.remove('expanded');
-          });
-          
-          // Abre apenas este card
           card.classList.toggle('expanded');
         });
         
@@ -756,12 +685,14 @@
         container.appendChild(card);
       });
       
-      // Adicionar eventos aos botões após renderizar todos os cards
       addButtonEvents();
     }
     
-    // Função para tentar encontrar um campo de status
     function findStatusField(item) {
+      if (item['I'] !== undefined) {
+        return 'I';
+      }
+      
       const possibleFields = ['status', 'Status', 'situacao', 'Situacao', 'Situação', 'situação', 'aprovacao', 'Aprovacao'];
       
       for (const field of possibleFields) {
@@ -770,7 +701,6 @@
         }
       }
       
-      // Procura por qualquer campo que tenha valores que indiquem status
       for (const [key, value] of Object.entries(item)) {
         if (value && typeof value === 'string') {
           const lowerValue = value.toLowerCase();
@@ -785,7 +715,6 @@
       return null;
     }
     
-    // Função para tentar encontrar um campo de plataforma
     function findPlatformField(item) {
       const possibleFields = ['plataforma', 'Plataforma', 'platform', 'Platform', 'rede', 'Rede', 'redeSocial', 'RedeSocial'];
       
@@ -795,7 +724,6 @@
         }
       }
       
-      // Procura por qualquer campo que mencione redes sociais
       for (const [key, value] of Object.entries(item)) {
         if (value && typeof value === 'string') {
           const lowerValue = value.toLowerCase();
@@ -812,9 +740,7 @@
       return null;
     }
     
-    // Adicionar eventos aos botões
     function addButtonEvents() {
-      // Botões "Avalie"
       document.querySelectorAll('.btn-evaluate').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -826,14 +752,12 @@
           
           debug(`Enviando avaliação para linha ${row}, valor: ${novo}`);
           
-          // Dados a serem enviados
           const data = {
             action: 'updateI',
             row: row,
             value: novo
           };
           
-          // Enviar via fetch API
           fetch(WEB_APP, {
             method: 'POST',
             mode: 'no-cors',
@@ -842,7 +766,7 @@
           })
           .then(response => {
             debug(`Resposta recebida para avaliação`);
-            setTimeout(loadData, 1000); // Recarregar após 1 segundo
+            setTimeout(loadData, 1000);
           })
           .catch(error => {
             debug(`Erro ao atualizar: ${error}`);
@@ -850,22 +774,18 @@
         });
       });
       
-      // Botões "Comentários"
       document.querySelectorAll('.btn-comment').forEach(btn => {
-btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const row = btn.dataset.row;
           const commentCount = parseInt(btn.dataset.count) || 0;
           
-          // Buscar comentários existentes
           const commentsData = {
             action: 'getComments',
             row: row
           };
           
-          // Função para exibir o modal de comentários
           function showCommentsModal(comments = []) {
-            // Criar modal
             const modal = document.createElement('div');
             modal.style.position = 'fixed';
             modal.style.top = '0';
@@ -878,7 +798,6 @@ btn.addEventListener('click', (e) => {
             modal.style.alignItems = 'center';
             modal.style.zIndex = '1000';
             
-            // Conteúdo do modal
             modal.innerHTML = `
               <div style="background: white; width: 90%; max-width: 500px; border-radius: var(--border-radius); padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -907,12 +826,10 @@ btn.addEventListener('click', (e) => {
             
             document.body.appendChild(modal);
             
-            // Evento de fechar
             document.getElementById('closeModal').addEventListener('click', () => {
               document.body.removeChild(modal);
             });
             
-            // Evento de adicionar comentário
             document.getElementById('addComment').addEventListener('click', () => {
               const text = document.getElementById('newComment').value.trim();
               if (!text) return;
@@ -932,7 +849,7 @@ btn.addEventListener('click', (e) => {
               .then(response => {
                 debug(`Comentário enviado para linha ${row}`);
                 document.body.removeChild(modal);
-                setTimeout(loadData, 1000); // Recarregar após 1 segundo
+                setTimeout(loadData, 1000);
               })
               .catch(error => {
                 debug(`Erro ao enviar comentário: ${error}`);
@@ -940,7 +857,6 @@ btn.addEventListener('click', (e) => {
             });
           }
           
-          // Verificar se já temos comentários armazenados
           if (allData) {
             const item = allData.find(d => d._row == row);
             if (item && item.comments) {
@@ -949,7 +865,6 @@ btn.addEventListener('click', (e) => {
             }
           }
           
-          // Se não temos comentários localmente, buscar da API
           debug(`Buscando comentários para linha ${row}`);
           fetch(`${WEB_APP}?action=getComments&row=${row}`)
             .then(response => response.json())
@@ -965,7 +880,6 @@ btn.addEventListener('click', (e) => {
       });
     }
     
-    // Carregar dados ao iniciar
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
