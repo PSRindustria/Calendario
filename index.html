@@ -5,6 +5,7 @@
   <title>Painel de Cards</title>
   <style>
     body { font-family: sans-serif; max-width:600px; margin:auto; padding:1rem; }
+    h1 { text-align:center; }
     #status { font-weight:bold; margin-bottom:1rem; }
     ul { list-style:none; padding:0; }
     li {
@@ -14,8 +15,8 @@
     li:hover { background:#f5f5f5; }
     .text-item { flex:1; cursor:pointer; }
     .btn { margin-left:.5rem; padding:.25rem .5rem; border:none; border-radius:3px; cursor:pointer; }
-    .btn-edit { background:#28a745; color:white; }
-    .btn-comment { background:#007bff; color:white; }
+    .btn-edit { background:#28a745; color:#fff; }
+    .btn-comment { background:#007bff; color:#fff; }
     .btn-edit:hover { background:#218838; }
     .btn-comment:hover { background:#0056b3; }
   </style>
@@ -26,26 +27,23 @@
   <ul id="lista"></ul>
 
   <script>
-    // 👉 Aqui é onde você coloca o URL do seu Web App (desenvolvimento ou exec)
+    // URL do seu Web App Apps Script
     const WEB_APP = 'https://script.google.com/macros/s/AKfycbz8q0sNKNA7JO_8NZw9_DGduOJ1qIExzbkSPSvHcedX/dev';
 
-    // 1) Ler todos os registros da planilha via GET ?action=getData
-    async function loadData() {
+    // 1) JSONP GET para buscar os dados
+    function loadData() {
       document.getElementById('status').textContent = 'Carregando…';
-      try {
-        const res   = await fetch(`${WEB_APP}?action=getData`);
-        const items = await res.json();
+      window.handleData = function(items) {
         render(items);
-        document.getElementById('status').textContent =
-          `Foram carregados ${items.length} registros.`;
-      } catch(err) {
-        document.getElementById('status').textContent =
-          'Erro ao carregar: ' + err.message;
-        console.error(err);
-      }
+        document.getElementById('status').textContent = `Foram carregados ${items.length} registros.`;
+        delete window.handleData;
+      };
+      const s = document.createElement('script');
+      s.src = `${WEB_APP}?action=getData&callback=handleData`;
+      document.head.appendChild(s);
     }
 
-    // 2) Renderiza cada linha como um "card"
+    // 2) Renderiza cada registro como um card
     function render(items) {
       const ul = document.getElementById('lista');
       ul.innerHTML = '';
@@ -56,68 +54,62 @@
       items.forEach(item => {
         const li = document.createElement('li');
 
-        // Texto principal
+        // Texto principal (exclui campos internos)
         const txt = document.createElement('div');
         txt.className = 'text-item';
         txt.textContent = Object.entries(item)
-          .filter(([k]) => !['_row','comments','commentCount'].includes(k))
-          .map(([k,v]) => `${k}: ${v}`)
+          .filter(([k])=>!['_row','comments','commentCount'].includes(k))
+          .map(([k,v])=>`${k}: ${v}`)
           .join(' │ ');
-        txt.onclick = () => editarI(item._row, item.I);
 
-        // Botão "Editar I"
+        // Botão para editar I
         const btnEdit = document.createElement('button');
         btnEdit.className = 'btn btn-edit';
         btnEdit.textContent = `I: ${item.I||''}`;
-        btnEdit.onclick   = () => editarI(item._row, item.I);
+        btnEdit.onclick = () => {
+          const novo = prompt('Valor para coluna I:', item.I||'');
+          if (novo === null) return;
+          fetch(WEB_APP, {
+            method: 'POST',
+            mode:   'no-cors',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({
+              action: 'updateI',
+              row:    item._row,
+              value:  novo
+            })
+          }).then(loadData);
+        };
 
-        // Botão "Comentários"
+        // Botão para comentários
         const btnC = document.createElement('button');
         btnC.className = 'btn btn-comment';
         btnC.textContent = `Comentários (${item.commentCount||0})`;
-        btnC.onclick     = () => comentar(item._row, item.comments);
+        btnC.onclick = () => {
+          const antigas = Array.isArray(item.comments) ? item.comments.join('\n') : '';
+          const msg = antigas
+            ? `Comentários anteriores:\n${antigas}\n\nNovo:`
+            : 'Digite seu comentário:';
+          const novo = prompt(msg);
+          if (!novo) return;
+          fetch(WEB_APP, {
+            method: 'POST',
+            mode:   'no-cors',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({
+              action:  'addComment',
+              row:     item._row,
+              comment: novo
+            })
+          }).then(loadData);
+        };
 
         li.append(txt, btnEdit, btnC);
         ul.appendChild(li);
       });
     }
 
-    // 3) Chama o Web App para atualizar a coluna I
-    async function editarI(row, current) {
-      const novo = prompt('Valor para Coluna I:', current||'');
-      if (novo === null) return;
-      await fetch(WEB_APP, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          action: 'updateI',
-          row:    row,
-          value:  novo
-        })
-      });
-      loadData();
-    }
-
-    // 4) Chama o Web App para adicionar um comentário
-    async function comentar(row, previous) {
-      const antigas = Array.isArray(previous) ? previous.join('\n') : '';
-      const msg = antigas
-        ? `Comentários anteriores:\n${antigas}\n\nNovo:`
-        : 'Digite seu comentário:';
-      const novo = prompt(msg);
-      if (!novo) return;
-      await fetch(WEB_APP, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          action: 'addComment',
-          row:     row,
-          comment: novo
-        })
-      });
-      loadData();
-    }
-
+    // Inicia ao carregar a página
     window.onload = loadData;
   </script>
 </body>
