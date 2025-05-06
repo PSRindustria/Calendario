@@ -104,20 +104,25 @@
     }
     
     .card.status-aprovado .card-header {
-      background-color: #28a745;
+      background-color: #28a745; /* Verde para aprovado */
     }
     
     .card.status-reprovado .card-header {
-      background-color: #dc3545;
+      background-color: #dc3545; /* Vermelho para reprovado */
     }
     
     .card.status-pendente .card-header {
-      background-color: #ffc107;
+      background-color: #ffc107; /* Amarelo para pendente */
       color: #212529;
     }
     
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
     .social-icon {
-      margin-left: 8px;
       font-size: 18px;
     }
     
@@ -146,6 +151,22 @@
     
     .field-value {
       flex-grow: 1;
+    }
+    
+    .link-field {
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .link-field:hover {
+      text-decoration: underline;
+    }
+    
+    .link-field i {
+      font-size: 14px;
     }
     
     .card-details {
@@ -378,7 +399,7 @@
         }
       });
       
-      // Converte o mapa para array e ordena por data (crescente)
+      // Converte o mapa para array e ordena por data
       // Pegamos o mês atual para garantir que ele apareça primeiro
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
@@ -602,7 +623,7 @@
         const statusField = findStatusField(item);
         let statusClass = '';
         if (statusField) {
-          const statusValue = item[statusField].toString().toLowerCase();
+          const statusValue = (item[statusField] || '').toString().toLowerCase();
           if (statusValue.includes('aprovado')) {
             statusClass = 'status-aprovado';
           } else if (statusValue.includes('reprovado')) {
@@ -616,7 +637,7 @@
         const platformField = findPlatformField(item);
         let socialIcon = '';
         if (platformField) {
-          const platform = item[platformField].toString().toLowerCase();
+          const platform = (item[platformField] || '').toString().toLowerCase();
           if (platform.includes('instagram')) {
             socialIcon = '<i class="fab fa-instagram social-icon"></i>';
           } else if (platform.includes('linkedin')) {
@@ -639,7 +660,7 @@
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
         cardHeader.innerHTML = `
-          <div>${previewColumns[0] ? previewColumns[0][1] : ''}${socialIcon}</div>
+          <div class="card-title">${previewColumns[0] ? previewColumns[0][1] : ''}${socialIcon}</div>
           <span class="expand-icon"></span>
         `;
         
@@ -721,14 +742,12 @@
           // Ignora cliques nos botões e links
           if (e.target.closest('.btn') || e.target.closest('a')) return;
           
-          // Fecha todos os outros cards
+          // Fecha todos os cards
           document.querySelectorAll('.card.expanded').forEach(expandedCard => {
-            if (expandedCard.getAttribute('data-card-id') !== item._row.toString()) {
-              expandedCard.classList.remove('expanded');
-            }
+            expandedCard.classList.remove('expanded');
           });
           
-          // Alterna o estado deste card
+          // Abre apenas este card
           card.classList.toggle('expanded');
         });
         
@@ -833,50 +852,121 @@
       
       // Botões "Comentários"
       document.querySelectorAll('.btn-comment').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const row = btn.dataset.row;
+          const commentCount = parseInt(btn.dataset.count) || 0;
           
-          // Buscar comentários existentes do item correspondente
-          const item = allData.find(i => i._row == row);
-          const antigas = Array.isArray(item.comments) ? item.comments.join('\n') : '';
-          
-          const msg = antigas
-            ? `Comentários anteriores:\n${antigas}\n\nNovo comentário:`
-            : 'Digite seu comentário:';
-            
-          const novo = prompt(msg);
-          if (!novo) return;
-          
-          debug(`Enviando comentário para linha ${row}: ${novo}`);
-          
-          // Dados a serem enviados
-          const data = {
-            action: 'addComment',
-            row: row,
-            comment: novo
+          // Buscar comentários existentes
+          const commentsData = {
+            action: 'getComments',
+            row: row
           };
           
-          // Enviar via fetch API
-          fetch(WEB_APP, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          })
-          .then(response => {
-            debug(`Resposta recebida para comentário`);
-            setTimeout(loadData, 1000); // Recarregar após 1 segundo
-          })
-          .catch(error => {
-            debug(`Erro ao adicionar comentário: ${error}`);
-          });
+          // Função para exibir o modal de comentários
+          function showCommentsModal(comments = []) {
+            // Criar modal
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '1000';
+            
+            // Conteúdo do modal
+            modal.innerHTML = `
+              <div style="background: white; width: 90%; max-width: 500px; border-radius: var(--border-radius); padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                  <h3 style="margin: 0;">Comentários</h3>
+                  <button id="closeModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                </div>
+                <div id="commentsList" style="margin-bottom: 1rem;">
+                  ${comments.length === 0 ? '<p>Nenhum comentário ainda.</p>' : ''}
+                  ${comments.map((comment, index) => `
+                    <div style="padding: 0.75rem; background: #f8f9fa; margin-bottom: 0.5rem; border-radius: var(--border-radius);">
+                      <div style="font-size: 0.9rem; color: var(--gray); margin-bottom: 0.25rem;">
+                        ${comment.date || 'Sem data'}
+                      </div>
+                      <div>${comment.text || ''}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div>
+                  <textarea id="newComment" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: var(--border-radius); margin-bottom: 0.5rem;" placeholder="Adicione um comentário..."></textarea>
+                  <button id="addComment" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-paper-plane"></i> Enviar
+                  </button>
+                </div>
+              </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Evento de fechar
+            document.getElementById('closeModal').addEventListener('click', () => {
+              document.body.removeChild(modal);
+            });
+            
+            // Evento de adicionar comentário
+            document.getElementById('addComment').addEventListener('click', () => {
+              const text = document.getElementById('newComment').value.trim();
+              if (!text) return;
+              
+              const commentData = {
+                action: 'addComment',
+                row: row,
+                text: text
+              };
+              
+              fetch(WEB_APP, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(commentData)
+              })
+              .then(response => {
+                debug(`Comentário enviado para linha ${row}`);
+                document.body.removeChild(modal);
+                setTimeout(loadData, 1000); // Recarregar após 1 segundo
+              })
+              .catch(error => {
+                debug(`Erro ao enviar comentário: ${error}`);
+              });
+            });
+          }
+          
+          // Verificar se já temos comentários armazenados
+          if (allData) {
+            const item = allData.find(d => d._row == row);
+            if (item && item.comments) {
+              showCommentsModal(item.comments);
+              return;
+            }
+          }
+          
+          // Se não temos comentários localmente, buscar da API
+          debug(`Buscando comentários para linha ${row}`);
+          fetch(`${WEB_APP}?action=getComments&row=${row}`)
+            .then(response => response.json())
+            .then(data => {
+              debug(`Comentários recebidos: ${data.length}`);
+              showCommentsModal(data);
+            })
+            .catch(error => {
+              debug(`Erro ao buscar comentários: ${error}`);
+              showCommentsModal([]);
+            });
         });
       });
     }
-
-    // Inicia ao carregar a página
-    window.onload = loadData;
+    
+    // Carregar dados ao iniciar
+    document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
 </html>
