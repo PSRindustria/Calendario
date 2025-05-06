@@ -21,7 +21,7 @@
     
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 800px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 1.5rem;
       background-color: #f0f2f5;
@@ -76,7 +76,7 @@
     
     .card-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 1rem;
     }
     
@@ -103,15 +103,16 @@
       align-items: center;
     }
     
-    .card.status-aprovado .card-header {
+    .card.aprovacao-aprovado .card-header {
       background-color: #28a745;
     }
     
-    .card.status-reprovado .card-header {
+    .card.aprovacao-reprovado .card-header {
       background-color: #dc3545;
     }
     
-    .card.status-pendente .card-header {
+    .card.aprovacao-pendente .card-header,
+    .card.aprovacao-em-andamento .card-header {
       background-color: #ffc107;
       color: #212529;
     }
@@ -120,11 +121,17 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 80%;
     }
     
     .social-icon {
       font-size: 18px;
       margin-right: 6px;
+      flex-shrink: 0;
     }
     
     .card-content {
@@ -135,23 +142,26 @@
     .card-preview {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.75rem;
     }
     
     .card-field {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
     }
     
     .field-label {
       font-weight: 500;
       color: var(--gray);
-      width: 80px;
+      width: 100px;
       flex-shrink: 0;
+      padding-right: 8px;
     }
     
     .field-value {
       flex-grow: 1;
+      word-break: break-word;
     }
     
     .link-field {
@@ -168,6 +178,7 @@
     
     .link-field i {
       font-size: 14px;
+      flex-shrink: 0;
     }
     
     .card-details {
@@ -269,6 +280,13 @@
       overflow-y: auto;
       font-family: monospace;
       font-size: 14px;
+    }
+
+    /* Estilos adicionais para melhorar organização */
+    .field-value-wrapper {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
     }
   </style>
 </head>
@@ -396,7 +414,7 @@
     function findDateField() {
       if (allData.length === 0) return null;
       
-      const possibleDateFields = ['data', 'date', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
+      const possibleDateFields = ['data', 'Data', 'date', 'Data:', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
       
       for (const field of possibleDateFields) {
         if (allData[0].hasOwnProperty(field)) {
@@ -559,29 +577,50 @@
       }
       
       items.forEach(item => {
-        const allColumns = Object.entries(item)
-          .filter(([key]) => !['_row', 'comments', 'commentCount'].includes(key));
+        // Organiza os campos para melhorar a exibição
+        const importantFields = [
+          'Nome', 'Data', 'Data:', 'Status', 'Status:', 'Aprovação', 'Aprovação:',
+          'Assunto', 'Assunto:', 'Plataforma', 'Plataforma:', 'Observação', 'Observação:'
+        ];
         
-        const previewColumns = [
-          allColumns[0],
-          allColumns[1],
-          allColumns.length >= 5 ? allColumns[4] : null,
-          allColumns.length >= 8 ? allColumns[7] : null,
-        ].filter(Boolean);
+        const organizedFields = [];
         
-        const statusField = findStatusField(item);
-        let statusClass = '';
-        if (statusField) {
-          const statusValue = (item[statusField] || '').toString().toLowerCase();
-          if (statusValue.includes('aprovado')) {
-            statusClass = 'status-aprovado';
-          } else if (statusValue.includes('reprovado')) {
-            statusClass = 'status-reprovado';
-          } else if (statusValue.includes('pendente')) {
-            statusClass = 'status-pendente';
+        // Primeiro adiciona os campos importantes
+        importantFields.forEach(field => {
+          for (const key in item) {
+            if (key === field || key.replace(':', '') === field) {
+              organizedFields.push([key, item[key]]);
+              break;
+            }
+          }
+        });
+        
+        // Depois adiciona os campos restantes que não são especiais
+        for (const [key, value] of Object.entries(item)) {
+          if (!importantFields.includes(key) && 
+              !importantFields.includes(key.replace(':', '')) && 
+              !['_row', 'comments', 'commentCount'].includes(key)) {
+            organizedFields.push([key, value]);
           }
         }
         
+        // Encontra o campo de aprovação para estilo do card
+        const aprovacaoField = findAprovacaoField(item);
+        let aprovacaoClass = '';
+        if (aprovacaoField) {
+          const aprovacaoValue = (item[aprovacaoField] || '').toString().toLowerCase();
+          if (aprovacaoValue.includes('aprovado')) {
+            aprovacaoClass = 'aprovacao-aprovado';
+          } else if (aprovacaoValue.includes('reprovado')) {
+            aprovacaoClass = 'aprovacao-reprovado';
+          } else if (aprovacaoValue.includes('pendente')) {
+            aprovacaoClass = 'aprovacao-pendente';
+          } else if (aprovacaoValue.includes('em andamento')) {
+            aprovacaoClass = 'aprovacao-em-andamento';
+          }
+        }
+        
+        // Encontra o campo de plataforma para ícones
         const platformField = findPlatformField(item);
         let socialIcon = '';
         if (platformField) {
@@ -599,14 +638,19 @@
           }
         }
         
+        // Cria o card
         const card = document.createElement('div');
-        card.className = `card ${statusClass}`;
+        card.className = `card ${aprovacaoClass}`;
         card.setAttribute('data-card-id', item._row);
+        
+        // Campo título (nome ou primeiro campo)
+        const titleField = findTitleField(item);
+        const titleText = titleField ? item[titleField] : (organizedFields[0] ? organizedFields[0][1] : 'Sem título');
         
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
         cardHeader.innerHTML = `
-          <div class="card-title">${socialIcon}${previewColumns[0] ? previewColumns[0][1] : ''}</div>
+          <div class="card-title">${socialIcon}${titleText}</div>
           <span class="expand-icon"></span>
         `;
         
@@ -642,29 +686,38 @@
           return formatDateValue(key, value);
         }
         
+        // Seleciona campos para preview (exibição no card fechado)
+        const previewFields = organizedFields.filter(field => 
+          !['Nome', titleField].includes(field[0]) && 
+          field[0] !== organizedFields[0][0]
+        ).slice(0, 5);
+        
         const cardContent = document.createElement('div');
         cardContent.className = 'card-content';
         cardContent.innerHTML = `
           <div class="card-preview">
-            ${previewColumns.slice(1).map(([key, value]) => `
+            ${previewFields.map(([key, value]) => `
               <div class="card-field">
                 <div class="field-label">${key}:</div>
-                <div class="field-value">${formatFieldValue(key, value)}</div>
+                <div class="field-value-wrapper">
+                  <div class="field-value">${formatFieldValue(key, value)}</div>
+                </div>
               </div>
             `).join('')}
           </div>
           <div class="card-details">
-            ${allColumns.map(([key, value], index) => {
-              if (previewColumns.some(col => col[0] === key)) return '';
-              return `
+            ${organizedFields
+              .filter(([key]) => !previewFields.some(field => field[0] === key) && key !== titleField)
+              .map(([key, value]) => `
                 <div class="card-field">
                   <div class="field-label">${key}:</div>
-                  <div class="field-value">${formatFieldValue(key, value)}</div>
+                  <div class="field-value-wrapper">
+                    <div class="field-value">${formatFieldValue(key, value)}</div>
+                  </div>
                 </div>
-              `;
-            }).join('')}
+              `).join('')}
             <div class="card-actions">
-              <button class="btn btn-success btn-evaluate" data-row="${item._row}" data-value="${item.I || ''}">
+              <button class="btn btn-success btn-evaluate" data-row="${item._row}" data-value="${item[aprovacaoField] || ''}">
                 <i class="fas fa-star"></i> Aprovação
               </button>
               <button class="btn btn-primary btn-comment" data-row="${item._row}" data-count="${item.commentCount || 0}">
@@ -688,12 +741,8 @@
       addButtonEvents();
     }
     
-    function findStatusField(item) {
-      if (item['I'] !== undefined) {
-        return 'I';
-      }
-      
-      const possibleFields = ['status', 'Status', 'situacao', 'Situacao', 'Situação', 'situação', 'aprovacao', 'Aprovacao'];
+    function findTitleField(item) {
+      const possibleFields = ['Nome', 'Nome:', 'Título', 'Título:', 'Titulo', 'Titulo:'];
       
       for (const field of possibleFields) {
         if (item[field] !== undefined) {
@@ -701,14 +750,27 @@
         }
       }
       
-      for (const [key, value] of Object.entries(item)) {
-        if (value && typeof value === 'string') {
-          const lowerValue = value.toLowerCase();
-          if (lowerValue.includes('aprovado') || 
-              lowerValue.includes('reprovado') || 
-              lowerValue.includes('pendente')) {
-            return key;
-          }
+      return Object.keys(item)[0];
+    }
+    
+    function findAprovacaoField(item) {
+      const possibleFields = ['Aprovação', 'Aprovação:', 'Aprovacao', 'Aprovacao:', 'aprovacao', 'aprovação'];
+      
+      for (const field of possibleFields) {
+        if (item[field] !== undefined) {
+          return field;
+        }
+      }
+      
+      return null;
+    }
+    
+    function findStatusField(item) {
+      const possibleFields = ['Status', 'Status:', 'status', 'situacao', 'Situacao', 'Situação', 'situação'];
+      
+      for (const field of possibleFields) {
+        if (item[field] !== undefined) {
+          return field;
         }
       }
       
@@ -716,7 +778,7 @@
     }
     
     function findPlatformField(item) {
-      const possibleFields = ['plataforma', 'Plataforma', 'platform', 'Platform', 'rede', 'Rede', 'redeSocial', 'RedeSocial'];
+      const possibleFields = ['Plataforma', 'Plataforma:', 'plataforma', 'Platform', 'platform', 'rede', 'Rede', 'redeSocial', 'RedeSocial'];
       
       for (const field of possibleFields) {
         if (item[field] !== undefined) {
@@ -807,19 +869,18 @@
                 <div id="commentsList" style="margin-bottom: 1rem;">
                   ${comments.length === 0 ? '<p>Nenhum comentário ainda.</p>' : ''}
                   ${comments.map((comment, index) => `
-                    <div style="padding: 0.75rem; background: #f8f9fa; margin-bottom: 0.5rem; border-radius: var(--border-radius);">
-                      <div style="font-size: 0.9rem; color: var(--gray); margin-bottom: 0.25rem;">
-                        ${comment.date || 'Sem data'}
+<div style="padding: 0.75rem; background-color: #f8f9fa; border-radius: 6px; margin-bottom: 0.5rem;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <strong>${comment.autor || 'Usuário'}</strong>
+                        <small style="color: var(--gray);">${comment.data || ''}</small>
                       </div>
-                      <div>${comment.text || ''}</div>
+                      <p style="margin: 0.25rem 0;">${comment.texto || ''}</p>
                     </div>
                   `).join('')}
                 </div>
                 <div>
-                  <textarea id="newComment" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: var(--border-radius); margin-bottom: 0.5rem;" placeholder="Adicione um comentário..."></textarea>
-                  <button id="addComment" class="btn btn-primary" style="width: 100%;">
-                    <i class="fas fa-paper-plane"></i> Enviar
-                  </button>
+                  <textarea id="newComment" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: var(--border-radius); margin-bottom: 0.5rem; min-height: 100px;" placeholder="Digite seu comentário..."></textarea>
+                  <button id="sendComment" style="background-color: var(--primary); color: white; border: none; padding: 0.75rem 1rem; border-radius: var(--border-radius); cursor: pointer; font-weight: 500;">Enviar Comentário</button>
                 </div>
               </div>
             `;
@@ -830,24 +891,26 @@
               document.body.removeChild(modal);
             });
             
-            document.getElementById('addComment').addEventListener('click', () => {
-              const text = document.getElementById('newComment').value.trim();
-              if (!text) return;
+            document.getElementById('sendComment').addEventListener('click', () => {
+              const comment = document.getElementById('newComment').value.trim();
+              if (!comment) return;
               
-              const commentData = {
+              debug(`Enviando comentário para linha ${row}: ${comment}`);
+              
+              const data = {
                 action: 'addComment',
                 row: row,
-                text: text
+                comment: comment
               };
               
               fetch(WEB_APP, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(commentData)
+                body: JSON.stringify(data)
               })
               .then(response => {
-                debug(`Comentário enviado para linha ${row}`);
+                debug(`Resposta recebida para comentário`);
                 document.body.removeChild(modal);
                 setTimeout(loadData, 1000);
               })
@@ -857,30 +920,29 @@
             });
           }
           
-          if (allData) {
-            const item = allData.find(d => d._row == row);
-            if (item && item.comments) {
-              showCommentsModal(item.comments);
-              return;
-            }
-          }
-          
-          debug(`Buscando comentários para linha ${row}`);
-          fetch(`${WEB_APP}?action=getComments&row=${row}`)
+          fetch(WEB_APP + '?action=getComments&row=' + row)
             .then(response => response.json())
             .then(data => {
-              debug(`Comentários recebidos: ${data.length}`);
-              showCommentsModal(data);
+              if (data && data.comments) {
+                showCommentsModal(data.comments);
+              } else {
+                showCommentsModal([]);
+              }
             })
             .catch(error => {
-              debug(`Erro ao buscar comentários: ${error}`);
+              debug(`Erro ao carregar comentários: ${error}`);
               showCommentsModal([]);
             });
         });
       });
     }
     
-    document.addEventListener('DOMContentLoaded', loadData);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadData();
+    });
+
+    // Atualizar cards periodicamente
+    setInterval(loadData, 300000); // a cada 5 minutos
   </script>
 </body>
 </html>
