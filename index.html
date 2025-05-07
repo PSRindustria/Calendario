@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda de Tarefas PSR</title>
+  <title>Painel de Cards Interativo V16</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     :root {
@@ -13,7 +13,7 @@
       --warning-color: #ffc107; 
       --accent-color: #f5a623; 
       --danger-color: #d0021b; 
-      --neutral-gray-color: #808080; /* Cinza para cancelado/suspenso */
+      --neutral-gray-color: #808080; 
       
       --light-gray: #f7f7f7;
       --medium-gray: #e0e0e0;
@@ -24,33 +24,98 @@
       --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
-      --highlight-yellow: rgba(255, 255, 0, 0.3); /* Marca texto amarelo sutil */
-      --highlight-orange: rgba(255, 165, 0, 0.3); /* Marca texto laranja sutil */
+      --highlight-yellow: rgba(255, 255, 0, 0.3);
+      --highlight-orange: rgba(255, 165, 0, 0.3);
     }
     
     body {
       font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 2rem;
-      background-color: var(--light-gray);
+      margin: 0;
+      background-color: transparent; 
       color: var(--text-color);
       line-height: 1.6;
+      position: relative; 
+      min-height: 100vh;
+    }
+
+    .page-background-banner {
+        position: fixed; 
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 600px; 
+        background-color: #cccccc; 
+        background-image: url('https://via.placeholder.com/1920x600/cccccc/808080?text=Banner+Fundo+Desktop');
+        background-size: cover;
+        background-position: center;
+        z-index: -1; 
+    }
+
+    .content-wrapper {
+        position: relative; 
+        z-index: 1;
+        background-color: transparent; 
+        flex-grow: 1;
+        padding-top: 2rem; 
+    }
+
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem 2rem 2rem; 
+        background-color: transparent; /* Alterado para transparente */
     }
     
+    .header {
+        max-width: 1400px; 
+        margin: 0 auto; 
+        margin-bottom: 1rem; 
+    }
+
     .header h1 {
       color: var(--primary-color);
       font-size: 2.5rem;
-      margin-bottom: 1rem;
       text-align: center;
       font-weight: 500;
+      text-shadow: 0px 0px 8px rgba(255,255,255,0.7); /* Adicionado para melhor leitura sobre banner */
+    }
+
+    @media (max-width: 768px) {
+        .page-background-banner {
+            height: 300px; 
+            background-image: url('https://via.placeholder.com/768x300/cccccc/808080?text=Banner+Fundo+Mobile');
+        }
+        .content-wrapper {
+            padding-top: 1rem;
+        }
+        .main-container {
+            padding: 0 1rem 1rem 1rem;
+        }
     }
     
-    #status {
-      font-weight: 400;
-      color: var(--dark-gray);
+    #status-messages {
+      color: var(--danger-color);
       margin-bottom: 1.5rem;
-      text-align: center;
+      text-align: center; /* Centralizado */
+      min-height: 1.2em; 
+      font-weight: normal; 
+      background-color: transparent; /* Fundo removido */
+      padding: 0; /* Padding removido */
+      border-radius: 0; /* Border-radius removido */
+      display: block; /* Para garantir que o text-align center funcione em toda a largura disponível */
+      width: 100%; /* Ocupa a largura para centralizar o texto dentro dela */
+      text-shadow: 0px 0px 5px rgba(255,255,255,0.8); /* Sombra para legibilidade sobre banner */
+    }
+    #status-messages:empty {
+        display: none; /* Oculta se vazio */
+    }
+
+    @keyframes intense-blink {
+        0%, 100% { opacity: 1; transform: scale(1.05); color: var(--danger-color); }
+        50% { opacity: 0.3; transform: scale(1); color: var(--accent-color); }
+    }
+    .pending-tasks-message.blinking {
+        animation: intense-blink 1s infinite;
     }
 
     .filters-container {
@@ -59,6 +124,9 @@
         gap: 1rem;
         margin-bottom: 2.5rem;
         flex-wrap: wrap;
+        background-color: rgba(255, 255, 255, 0.85); /* Fundo leve para legibilidade */
+        padding: 1rem;
+        border-radius: var(--border-radius);
     }
     .filters-container select {
         padding: 0.6rem 1rem;
@@ -119,18 +187,18 @@
     .card-header.header-status-critical-issue .expand-icon::before {
         font-family: "Font Awesome 6 Free";
         font-weight: 900;
-        content: "\f00d"; /* Ícone X */
+        content: "\f00d"; 
     }
     
     .card-title {
-      display: flex; align-items: center; gap: 0.3rem; /* Reduzido o gap para acomodar mais ícones */
+      display: flex; align-items: center; gap: 0.3rem; 
       font-weight: bold;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); /* Ajustado para ícone de X */
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); 
       font-size: 1.1rem;
     }
     .platform-icons-wrapper .social-icon { 
         font-size: 1.1rem; 
-        margin-right: 0.2rem; /* Espaçamento entre múltiplos ícones */
+        margin-right: 0.2rem; 
         flex-shrink: 0; 
     }
     .expand-icon { transition: transform 0.3s ease; font-size: 1rem; }
@@ -170,15 +238,19 @@
     .field-label-custom {
       font-weight: 500; color: var(--dark-gray); display: block;
       margin-bottom: 0.25rem; font-size: 0.9rem;
+      white-space: nowrap; /* Não quebrar título da data */
     }
     .field-value-custom {
       word-break: break-word; display: block; font-size: 0.95rem; color: var(--text-color);
+      white-space: nowrap; /* Não quebrar valor da data */
+      overflow: hidden; /* Esconder se muito grande */
+      text-overflow: ellipsis; /* Adicionar ... se muito grande */
     }
     .field-value-custom a.link-field {
       color: var(--primary-color); text-decoration: none; display: inline-flex;
       align-items: center; gap: 0.3rem; justify-content: center;
+      white-space: normal; /* Links podem quebrar */
     }
-    .field-value-custom a.link-field:hover { text-decoration: underline; color: var(--primary-light); }
     .field-value-custom div.comment-item { 
         margin-bottom: 0.5rem; 
         text-align: left; 
@@ -192,30 +264,41 @@
     .status-highlight-orange { background-color: var(--highlight-orange); padding: 0.1em 0.3em; border-radius: 3px; display: inline; }
     .status-text-strike { text-decoration: line-through; }
 
-    .dates-group .field-label-custom { margin-bottom: 0.4rem; }
+    .dates-group {
+        border-radius: calc(var(--border-radius) - 4px);
+        margin-top: 0.5rem; 
+    }
+    .dates-group .field-label-custom { 
+        margin-bottom: 0.4rem; 
+        font-size: 0.8em; /* Reduzir um pouco para caber */
+    }
     .dates-group .date-pair {
         display: flex; 
-        justify-content: space-around;
-        gap: 1rem;
+        justify-content: space-between; 
+        gap: 0.75rem; /* Reduzido o gap */
         text-align: center;
     }
     .dates-group .date-item {
         flex: 1;
+        background-color: var(--light-gray); 
+        padding: 0.6rem; /* Reduzido padding */
+        border-radius: calc(var(--border-radius) - 6px); 
     }
-    .dates-group .date-item .field-label-custom { font-size: 0.85rem; margin-bottom: 0.15rem; }
-    .dates-group .date-item .field-value-custom { font-size: 0.9rem; }
+    .dates-group .date-item .field-value-custom { 
+        font-size: 0.85em; /* Reduzir um pouco para caber */
+    }
 
     .card-actions {
       display: flex;
       justify-content: space-evenly; 
       align-items: center; 
-      gap: 1rem;
+      gap: 0.5rem; 
       margin-top: 1.25rem;
-      padding-top: 1.25rem;
+      padding: 1.25rem 0.5rem 0.5rem 0.5rem; 
       border-top: 1px dashed var(--medium-gray);
     }
     .btn-action {
-      padding: 0.7rem 1.4rem;
+      padding: 0.6rem 1rem; 
       border: none;
       border-radius: var(--border-radius);
       cursor: pointer;
@@ -223,13 +306,15 @@
       transition: var(--transition);
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.95rem;
+      gap: 0.4rem; 
+      font-size: 0.9rem; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      flex-grow: 0; 
+      flex-grow: 1; 
+      text-align: center;
+      justify-content: center;
     }
     .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .btn-action i { font-size: 1.1em; }
+    .btn-action i { font-size: 1em; }
     .btn-aprovacao {
       background-color: var(--primary-color); 
       color: white;
@@ -245,10 +330,6 @@
     .empty-state i { font-size: 3.5rem; color: var(--dark-gray); margin-bottom: 1.5rem; }
     .empty-state h3 { color: var(--dark-gray); margin-bottom: 0.75rem; font-size: 1.5rem; font-weight: 500; }
     
-    .debug-panel { margin-top: 2rem; padding: 1rem; border: 1px dashed #ccc; border-radius: var(--border-radius); display: none; background-color: #f8f9fa; }
-    .debug-panel h3 { color: var(--gray); margin-top: 0; font-size: 1rem; }
-    .debug-content { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 14px; }
-
     .custom-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(0,0,0,0.5);
@@ -274,13 +355,19 @@
   </style>
 </head>
 <body>
-  <div class="header"><h1>Painel de Cards Interativo V10</h1></div>
-  <div id="status">Carregando dados...</div>
-  <div class="filters-container" id="filtersContainer">
+  <div class="page-background-banner" id="pageBackgroundBanner"></div>
+  <div class="content-wrapper">
+    <div class="header">
+      <h1>Painel de Cards Interativo V16</h1>
+    </div>
+    <div class="main-container">
+      <div id="status-messages"></div>
+      <div class="filters-container" id="filtersContainer">
+      </div>
+      <div id="cardContainer" class="card-container"></div>
+    </div>
   </div>
-  <div id="cardContainer" class="card-container"></div>
-  <div id="debug" class="debug-panel"><h3>Log de Depuração</h3><div class="debug-content"></div></div>
-
+  
   <div class="custom-modal-overlay" id="successModalOverlay">
     <div class="custom-modal">
         <h3 id="modalTitle">Sucesso!</h3>
@@ -300,7 +387,7 @@
     let successModalTimeout;
 
     const FIELD_KEYS = {
-        TITLE: ['Título', 'Nome', 'Title', 'Assunto'], // Priorizando 'Título'
+        TITLE: ['Título', 'Nome', 'Title', 'Assunto'],
         STATUS: ['Status', 'Status:'],
         OBSERVACAO: ['Observação', 'Observacao', 'Observacão'],
         APROVACAO: ['Aprovação', 'Aprovacao'],
@@ -310,16 +397,6 @@
         DATA_POSTAGEM: ['Data da Postagem', 'Data Postagem', 'dataPostagem', 'Data', 'Data:'],
         DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
     };
-
-    function debug(message) {
-      const debugPanel = document.getElementById('debug');
-      const debugContent = debugPanel.querySelector('.debug-content');
-      if (debugPanel && debugContent) {
-        debugPanel.style.display = 'block';
-        const timestamp = new Date().toLocaleTimeString();
-        debugContent.innerHTML += `<div>${timestamp}: ${message}</div>`;
-      }
-    }
 
     function showSuccessModal(title, message, duration = 2000, callback) {
         const overlay = document.getElementById('successModalOverlay');
@@ -348,22 +425,49 @@
             if (callback) callback();
         }, duration);
     }
+    
+    function updateStatusMessage() {
+        const statusMessagesDiv = document.getElementById('status-messages');
+        statusMessagesDiv.innerHTML = ''; 
+        statusMessagesDiv.classList.remove('blinking', 'pending-tasks-message');
+
+        let hasPendingTasks = false;
+        for (const item of allData) {
+            const statusValue = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
+            const aprovacaoValue = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
+            if (statusValue === 'aguardando resposta' || aprovacaoValue === 'reprovado' || aprovacaoValue === 'pendente') {
+                hasPendingTasks = true;
+                break;
+            }
+        }
+
+        if (hasPendingTasks) {
+            statusMessagesDiv.textContent = 'Você tem pendências a serem resolvidas!';
+            statusMessagesDiv.classList.add('pending-tasks-message', 'blinking');
+        } 
+    }
 
     function loadData() {
-      document.getElementById('status').textContent = 'Carregando dados...';
+      document.getElementById('status-messages').textContent = 'Carregando dados...';
       window.handleDataCallback = function(items) {
         allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) }));
         populateFilters();
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const currentMonthValue = `${currentYear}-${currentMonth}`;
+        const monthFilterSelect = document.getElementById('monthFilter');
+        if (monthFilterSelect && Array.from(monthFilterSelect.options).some(opt => opt.value === currentMonthValue)) {
+            monthFilterSelect.value = currentMonthValue;
+            activeFilters.month = currentMonthValue;
+        }
         applyFiltersAndRender();
-        document.getElementById('status').textContent = `${allData.length} registros carregados.`;
         delete window.handleDataCallback;
       };
       const scriptEl = document.createElement('script');
       scriptEl.src = `${WEB_APP_URL}?action=getData&callback=handleDataCallback&nocache=${new Date().getTime()}`;
       document.head.appendChild(scriptEl);
       scriptEl.onerror = () => {
-        debug('Falha ao carregar dados do WEB_APP.');
-        document.getElementById('status').textContent = 'Erro ao carregar dados.';
+        document.getElementById('status-messages').textContent = 'Erro ao carregar dados.';
         delete window.handleDataCallback;
       };
     }
@@ -437,7 +541,6 @@
             const platformSelect = document.createElement('select');
             platformSelect.id = 'platformFilter';
             platformSelect.innerHTML = '<option value="">Todas as Plataformas</option>';
-            // Para filtros de plataforma, precisamos pegar todas as plataformas individuais
             const allIndividualPlatforms = new Set();
             allData.forEach(item => {
                 const platformValue = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
@@ -481,6 +584,7 @@
             });
         }
         renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
+        updateStatusMessage();
     }
     
     function getMonthName(monthIndex) {
@@ -522,7 +626,7 @@
             d = new Date(dateStr);
           }
           return (d && !isNaN(d.getTime())) ? d : null;
-        } catch (e) { debug(`Erro ao analisar data: ${dateStr} -> ${e.message}`); }
+        } catch (e) { /* console.error('Date parse error:', e); */ }
       }
       return null;
     }
@@ -555,20 +659,17 @@
             'email mkt': '<i class="fas fa-envelope-open-text social-icon"></i>', 
             'newsletter': '<i class="fas fa-newspaper social-icon"></i>',
             'comunicado': '<i class="fas fa-bullhorn social-icon"></i>',
-            // O caso 'todos' é mais complexo. Se 'todos' estiver presente, talvez mostrar um conjunto padrão ou um ícone genérico.
-            // Por ora, se 'todos' for a única plataforma, mostra um ícone genérico. Se estiver com outras, ignora 'todos'.
         };
 
         if (platforms.includes('todos') && platforms.length === 1) {
-            return '<i class="fas fa-globe social-icon"></i>'; // Ícone genérico para 'Todos'
+            return '<i class="fas fa-globe social-icon"></i>';
         }
-        if (platforms.includes('todos') && platforms.length > 1) {
-            // Se 'todos' está com outras, remove 'todos' para não duplicar ou confundir
+        if (platforms.includes('todos')) {
             const index = platforms.indexOf('todos');
             if (index > -1) platforms.splice(index, 1);
         }
 
-        const displayedIcons = new Set(); // Para evitar duplicar ícones se houver variações (e-mail mkt vs email mkt)
+        const displayedIcons = new Set();
         platforms.forEach(p => {
             if (platformIconMap[p] && !displayedIcons.has(platformIconMap[p])) {
                 iconsHtml += platformIconMap[p];
@@ -603,7 +704,7 @@
             }
             displayValue = commentsArray.map(c => `<div class="comment-item">${escapeHtml(String(c))}</div>`).join('');
             if (!displayValue && !item.hasOwnProperty(config.keys.find(k => item.hasOwnProperty(k)))) return '';
-        } else if (config.keys.includes(FIELD_KEYS.STATUS[0])) { // Estilização especial para o campo Status
+        } else if (config.keys.includes(FIELD_KEYS.STATUS[0])) {
             const statusText = escapeHtml(String(fieldValue));
             const statusLower = String(fieldValue).toLowerCase();
             if (statusLower === 'em andamento' || statusLower === 'na fila') {
@@ -637,12 +738,12 @@
       
       const summaryFieldsConfig = [
         { title: 'Status:', keys: FIELD_KEYS.STATUS },
-        { title: 'Assunto:', keys: FIELD_KEYS.TITLE }, // Assunto não é o título do card, mas um campo do sumário
+        { title: 'Assunto:', keys: FIELD_KEYS.TITLE },
         { title: 'Observação:', keys: FIELD_KEYS.OBSERVACAO }
       ];
 
       const detailFieldsConfig = [
-        { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA }, // Plataforma como texto nos detalhes
+        { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA },
         { title: 'Link do Drive:', keys: FIELD_KEYS.LINK_DRIVE, isLink: true },
         { title: 'Comentários:', keys: FIELD_KEYS.COMENTARIOS }
       ];
@@ -676,7 +777,7 @@
             cardHeader.classList.add('header-aprovacao-pendente');
         } else if (aprovacaoValueForLogic === 'reprovado') {
             cardHeader.classList.add('header-aprovacao-reprovado');
-        } // Senão, azul padrão
+        }
         
         const dataPostagemStr = getFieldValue(item, FIELD_KEYS.DATA_POSTAGEM);
         const dataPostagem = parseDate(dataPostagemStr);
@@ -686,13 +787,12 @@
         
         const plataformaString = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
         const platformIconsHtml = getPlatformIconsHtml(plataformaString);
-        const cardTitleText = escapeHtml(getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título')); // Título do card
+        const cardTitleText = escapeHtml(getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título'));
         
         cardHeader.innerHTML = `
             <span class="card-title">${platformIconsHtml}${cardTitleText}</span>
             <i class="fas ${isCritical ? '' : 'fa-chevron-down'} expand-icon"></i>
         `;
-        // Se for crítico, o ícone de X é tratado pelo CSS em .card-header.header-status-critical-issue .expand-icon::before
 
         const cardContentWrapper = document.createElement('div');
         cardContentWrapper.className = 'card-content-wrapper';
@@ -800,7 +900,6 @@
             showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
         })
         .catch(error => {
-            debug(`Erro ao enviar dados para Apps Script: ${error}`);
             showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
         });
     }
