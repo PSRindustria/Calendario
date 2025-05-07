@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Cards</title>
+  <title>Painel de Cards Interativo V4</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     :root {
       --primary: #4361ee;
       --primary-light: #4895ef;
-      --success: #4cc9f0;
+      --success: #4cc9f0; /* Azul claro para botão Aprovação */
+      --secondary: #3f37c9; /* Azul mais escuro para botão Comentar */
       --warning: #f72585;
       --light: #f8f9fa;
       --dark: #212529;
@@ -28,15 +29,11 @@
       color: var(--dark);
     }
     
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    
     .header h1 {
       color: var(--primary);
       font-size: 2.2rem;
       margin-bottom: 0.5rem;
+      text-align: center;
     }
     
     #status {
@@ -63,21 +60,13 @@
       cursor: pointer;
       transition: var(--transition);
     }
-    
-    .date-btn:hover {
-      background-color: var(--primary-light);
-      color: white;
-    }
-    
-    .date-btn.active {
-      background-color: var(--primary);
-      color: white;
-    }
+    .date-btn:hover { background-color: var(--primary-light); color: white; }
+    .date-btn.active { background-color: var(--primary); color: white; }
     
     .card-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
     }
     
     .card {
@@ -86,12 +75,9 @@
       box-shadow: var(--shadow);
       transition: var(--transition);
       overflow: hidden;
+      /* cursor: pointer; /* Removido para que o clique seja no header para expandir */
     }
-    
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
     
     .card-header {
       background-color: var(--primary);
@@ -101,214 +87,128 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer; /* Adicionado para indicar que o header é clicável */
     }
-    
-    .card.aprovacao-aprovado .card-header {
-      background-color: #28a745;
-    }
-    
-    .card.aprovacao-reprovado .card-header {
-      background-color: #dc3545;
-    }
-    
-    .card.aprovacao-pendente .card-header,
-    .card.aprovacao-em-andamento .card-header {
-      background-color: #ffc107;
-      color: #212529;
-    }
+    .card.aprovacao-aprovado .card-header { background-color: #28a745; }
+    .card.aprovacao-reprovado .card-header { background-color: #dc3545; }
+    .card.aprovacao-pendente .card-header, .card.aprovacao-em-andamento .card-header { background-color: #ffc107; color: #212529; }
     
     .card-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: bold;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 80%;
+      display: flex; align-items: center; gap: 6px; font-weight: bold;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); /* Ajuste para caber o ícone */
     }
+    .social-icon { font-size: 18px; margin-right: 6px; flex-shrink: 0; }
+    .expand-icon { transition: transform 0.3s ease; }
+    .card.expanded .expand-icon { transform: rotate(180deg); }
     
-    .social-icon {
-      font-size: 18px;
-      margin-right: 6px;
-      flex-shrink: 0;
-    }
-    
-    .card-content {
+    .card-content-wrapper {
       padding: 1rem;
-      cursor: pointer;
     }
-    
-    .card-preview {
+
+    .card-summary, .card-details {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
     }
-    
-    .card-field {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 0.5rem;
-    }
-    
-    .field-label {
-      font-weight: 500;
-      color: var(--gray);
-      width: 100px;
-      flex-shrink: 0;
-      padding-right: 8px;
-    }
-    
-    .field-value {
-      flex-grow: 1;
-      word-break: break-word;
-    }
-    
-    .link-field {
-      color: var(--primary);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    
-    .link-field:hover {
-      text-decoration: underline;
-    }
-    
-    .link-field i {
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-    
+
     .card-details {
-      display: none;
-      border-top: 1px solid #eee;
-      margin-top: 1rem;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease-out, opacity 0.3s ease-out, margin-top 0.5s ease-out, padding-top 0.5s ease-out;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .card.expanded .card-details {
+      max-height: 1500px; /* Um valor grande o suficiente */
+      opacity: 1;
+      margin-top: 1rem; 
       padding-top: 1rem;
+      border-top: 1px solid #eee;
     }
     
+    .card-field-custom {
+      text-align: center;
+    }
+    .field-label-custom {
+      font-weight: bold; color: var(--dark); display: block;
+      margin-bottom: 0.3rem; font-size: 0.9em;
+    }
+    .field-value-custom {
+      word-break: break-word; display: block; font-size: 0.85em; color: var(--gray);
+    }
+    .field-value-custom a.link-field {
+      color: var(--primary); text-decoration: none; display: inline-flex;
+      align-items: center; gap: 5px; justify-content: center;
+    }
+    .field-value-custom a.link-field:hover { text-decoration: underline; }
+    .field-value-custom div.comment-item { margin-bottom: 4px; text-align: left; white-space: pre-wrap; }
+
+    .dates-group .field-label-custom { margin-bottom: 0.5rem; }
+    .dates-group .date-pair {
+        display: flex; 
+        justify-content: space-around;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    .dates-group .date-item {
+        flex: 1;
+    }
+    .dates-group .date-item .field-label-custom { font-size: 0.8em; margin-bottom: 0.1rem; }
+    .dates-group .date-item .field-value-custom { font-size: 0.8em; }
+
     .card-actions {
       display: flex;
-      justify-content: center;
-      gap: 0.5rem;
+      justify-content: space-around;
+      gap: 1rem;
       margin-top: 1rem;
-      padding-top: 0.5rem;
+      padding-top: 1rem;
       border-top: 1px dashed #eee;
     }
-    
-    .btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
+    .btn-action {
+      padding: 0.6rem 1.2rem;
       border: none;
       border-radius: var(--border-radius);
       cursor: pointer;
       font-weight: 500;
       transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9em;
     }
-    
-    .btn-success {
+    .btn-action i { font-size: 1.1em; }
+    .btn-aprovacao {
       background-color: var(--success);
       color: white;
     }
-    
-    .btn-success:hover {
-      background-color: #3db8db;
-    }
-    
-    .btn-primary {
-      background-color: var(--primary);
+    .btn-aprovacao:hover { background-color: #3db8db; }
+    .btn-comentar {
+      background-color: var(--secondary);
       color: white;
     }
-    
-    .btn-primary:hover {
-      background-color: var(--primary-light);
-    }
-    
-    .card.expanded .card-details {
-      display: block;
-    }
-    
-    .card.expanded .expand-icon::before {
-      content: '\f077';
-    }
-    
-    .expand-icon::before {
-      content: '\f078';
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      background-color: white;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-    }
-    
-    .empty-state i {
-      font-size: 3rem;
-      color: var(--gray);
-      margin-bottom: 1rem;
-    }
-    
-    .empty-state h3 {
-      color: var(--gray);
-      margin-bottom: 0.5rem;
-    }
-    
-    .debug-panel {
-      margin-top: 2rem;
-      padding: 1rem;
-      border: 1px dashed #ccc;
-      border-radius: var(--border-radius);
-      display: none;
-      background-color: #f8f9fa;
-    }
-    
-    .debug-panel h3 {
-      color: var(--gray);
-      margin-top: 0;
-      font-size: 1rem;
-    }
-    
-    .debug-content {
-      max-height: 200px;
-      overflow-y: auto;
-      font-family: monospace;
-      font-size: 14px;
-    }
+    .btn-comentar:hover { background-color: var(--primary); }
 
-    /* Estilos adicionais para melhorar organização */
-    .field-value-wrapper {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    .empty-state { text-align: center; padding: 2rem; background-color: white; border-radius: var(--border-radius); box-shadow: var(--shadow); grid-column: 1 / -1; }
+    .empty-state i { font-size: 3rem; color: var(--gray); margin-bottom: 1rem; }
+    .empty-state h3 { color: var(--gray); margin-bottom: 0.5rem; }
+    
+    .debug-panel { margin-top: 2rem; padding: 1rem; border: 1px dashed #ccc; border-radius: var(--border-radius); display: none; background-color: #f8f9fa; }
+    .debug-panel h3 { color: var(--gray); margin-top: 0; font-size: 1rem; }
+    .debug-content { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 14px; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Painel de Cards</h1>
-  </div>
-  
+  <div class="header"><h1>Painel de Cards Interativo V4</h1></div>
   <div id="status">Carregando dados...</div>
-  
   <div class="date-navigator" id="dateFilter"></div>
-  
   <div id="cardContainer" class="card-container"></div>
-  
-  <div id="debug" class="debug-panel">
-    <h3>Log de Depuração</h3>
-    <div class="debug-content"></div>
-  </div>
+  <div id="debug" class="debug-panel"><h3>Log de Depuração</h3><div class="debug-content"></div></div>
 
   <script>
-    const WEB_APP = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
-    
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
     let allData = [];
     let availableDates = [];
     let currentDateFilter = null;
@@ -316,161 +216,106 @@
     function debug(message) {
       const debugPanel = document.getElementById('debug');
       const debugContent = debugPanel.querySelector('.debug-content');
-      debugPanel.style.display = 'block';
-      const timestamp = new Date().toLocaleTimeString();
-      debugContent.innerHTML += `<div>${timestamp}: ${message}</div>`;
+      if (debugPanel && debugContent) {
+        debugPanel.style.display = 'block';
+        const timestamp = new Date().toLocaleTimeString();
+        debugContent.innerHTML += `<div>${timestamp}: ${message}</div>`;
+      }
     }
 
     function loadData() {
       document.getElementById('status').textContent = 'Carregando dados...';
-      window.handleData = function(items) {
-        allData = items;
-        
+      window.handleDataCallback = function(items) {
+        allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) })); // _row é o ID da planilha
         extractDates();
-        
         renderDateFilters();
-        
-        if (availableDates.length > 0) {
-          filterByDate(availableDates[0]);
-        } else {
-          renderCards(allData);
-        }
-        
+        const initialDateFilter = findInitialDateFilter();
+        filterByDate(initialDateFilter);
         document.getElementById('status').textContent = `${allData.length} registros carregados.`;
-        delete window.handleData;
+        delete window.handleDataCallback;
       };
-      
-      const script = document.createElement('script');
-      script.src = `${WEB_APP}?action=getData&callback=handleData`;
-      document.head.appendChild(script);
+      const scriptEl = document.createElement('script');
+      scriptEl.src = `${WEB_APP_URL}?action=getData&callback=handleDataCallback&nocache=${new Date().getTime()}`;
+      document.head.appendChild(scriptEl);
+      scriptEl.onerror = () => {
+        debug('Falha ao carregar dados do WEB_APP.');
+        document.getElementById('status').textContent = 'Erro ao carregar dados.';
+        delete window.handleDataCallback;
+      };
+    }
+
+    function findInitialDateFilter() {
+        if (availableDates.length === 0) return null;
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        let targetDateFilter = availableDates.find(d => d.year === currentYear && d.month === currentMonth);
+        if (!targetDateFilter) {
+            const sortedDates = [...availableDates].sort((a,b) => (b.year * 100 + b.month) - (a.year*100 + a.month));
+            targetDateFilter = sortedDates[0] || null;
+        }
+        return targetDateFilter;
     }
     
     function extractDates() {
-      const dateField = findDateField();
-      
-      if (!dateField) {
-        debug("Nenhum campo de data identificado nos dados");
-        return;
+      const dateFieldKey = findDateFieldKey();
+      if (!dateFieldKey) {
+        debug("Nenhum campo de data (postagem) identificado para filtro.");
+        availableDates = []; return;
       }
-      
       const dateMap = {};
-      
       allData.forEach(item => {
-        if (item[dateField]) {
-          let dateValue;
-          try {
-            if (typeof item[dateField] === 'string') {
-              if (item[dateField].includes('/')) {
-                const parts = item[dateField].split('/');
-                if (parts.length === 3) {
-                  dateValue = new Date(parts[2], parts[1]-1, parts[0]);
-                  
-                  if (isNaN(dateValue.getTime())) {
-                    dateValue = new Date(parts[2], parts[0]-1, parts[1]);
-                  }
-                } else if (parts.length === 2) {
-                  const currentYear = new Date().getFullYear();
-                  dateValue = new Date(currentYear, parts[1]-1, parts[0]);
-                }
-              } else {
-                dateValue = new Date(item[dateField]);
-              }
-            } else if (item[dateField] instanceof Date) {
-              dateValue = item[dateField];
+        const dateValueStr = getFieldValue(item, [dateFieldKey]);
+        if (dateValueStr) {
+          let dateValue = parseDate(dateValueStr);
+          if (dateValue && !isNaN(dateValue.getTime())) {
+            const month = dateValue.getMonth();
+            const year = dateValue.getFullYear();
+            const key = `${year}-${month}`;
+            if (!dateMap[key]) {
+              dateMap[key] = { year: year, month: month, label: getMonthName(month) + ' ' + year };
             }
-            
-            if (dateValue && !isNaN(dateValue.getTime())) {
-              const month = dateValue.getMonth();
-              const year = dateValue.getFullYear();
-              const key = `${year}-${month}`;
-              
-              if (!dateMap[key]) {
-                dateMap[key] = {
-                  year: year,
-                  month: month,
-                  label: getMonthName(month) + ' ' + year
-                };
-              }
-            }
-          } catch (e) {
-            debug(`Erro ao analisar data: ${e.message}`);
           }
         }
       });
-      
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
-      
-      availableDates = Object.values(dateMap).sort((a, b) => {
-        if (a.month === currentMonth && a.year === currentYear) return -1;
-        if (b.month === currentMonth && b.year === currentYear) return 1;
-        
-        if (a.year !== b.year) return a.year - b.year;
-        return a.month - b.month;
-      });
+      availableDates = Object.values(dateMap).sort((a, b) => (b.year * 100 + b.month) - (a.year * 100 + a.month));
     }
     
-    function findDateField() {
+    function findDateFieldKey() {
       if (allData.length === 0) return null;
-      
-      const possibleDateFields = ['data', 'Data', 'date', 'Data:', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
-      
-      for (const field of possibleDateFields) {
-        if (allData[0].hasOwnProperty(field)) {
-          return field;
-        }
+      const possibleKeys = ['Data da Postagem', 'Data Postagem', 'dataPostagem', 'Data', 'Data:', 'date', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
+      const firstItemKeys = Object.keys(allData[0]);
+      for (const pk of possibleKeys) {
+        if (firstItemKeys.includes(pk)) return pk;
       }
-      
-      for (const key in allData[0]) {
+      for (const key of firstItemKeys) {
         const value = allData[0][key];
-        if (value) {
-          if (typeof value === 'string' && (
-              value.includes('/') || 
-              value.match(/\d{4}-\d{2}-\d{2}/) ||
-              !isNaN(new Date(value).getTime())
-          )) {
-            return key;
-          }
-          
-          if (value instanceof Date) {
-            return key;
-          }
-        }
+        if (value && typeof value === 'string' && (value.includes('/') || value.match(/^\d{4}-\d{2}-\d{2}/) || !isNaN(new Date(value).getTime()))) return key;
+        if (value instanceof Date) return key;
       }
-      
       return null;
     }
     
     function getMonthName(monthIndex) {
-      const months = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-      ];
+      const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       return months[monthIndex];
     }
     
     function renderDateFilters() {
       const filterContainer = document.getElementById('dateFilter');
       filterContainer.innerHTML = '';
-      
-      if (availableDates.length === 0) {
-        filterContainer.innerHTML = '<div class="date-btn disabled">Sem datas disponíveis</div>';
-        return;
-      }
-      
+      if (availableDates.length === 0) return;
+
       const allButton = document.createElement('button');
       allButton.className = 'date-btn' + (currentDateFilter === null ? ' active' : '');
       allButton.textContent = 'Todos';
       allButton.onclick = () => filterByDate(null);
       filterContainer.appendChild(allButton);
-      
+
       availableDates.forEach(dateObj => {
         const btn = document.createElement('button');
         btn.className = 'date-btn';
-        if (currentDateFilter && 
-            currentDateFilter.year === dateObj.year && 
-            currentDateFilter.month === dateObj.month) {
+        if (currentDateFilter && currentDateFilter.year === dateObj.year && currentDateFilter.month === dateObj.month) {
           btn.classList.add('active');
         }
         btn.textContent = dateObj.label;
@@ -481,84 +326,121 @@
     
     function filterByDate(dateObj) {
       currentDateFilter = dateObj;
+      document.querySelectorAll('#dateFilter .date-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtnLabel = dateObj ? dateObj.label : 'Todos';
+      document.querySelectorAll('#dateFilter .date-btn').forEach(btn => {
+        if (btn.textContent === activeBtnLabel) btn.classList.add('active');
+      });
       
-      const filterButtons = document.querySelectorAll('.date-btn');
-      filterButtons.forEach(btn => btn.classList.remove('active'));
-      
-      if (dateObj === null) {
-        document.querySelector('.date-btn:first-child').classList.add('active');
-        
-        const dateField = findDateField();
-        const sortedData = [...allData].sort((a, b) => {
-          const dateA = parseDate(a[dateField]);
-          const dateB = parseDate(b[dateField]);
-          
-          if (!dateA && !dateB) return 0;
-          if (!dateA) return 1;
-          if (!dateB) return -1;
-          
-          return dateA - dateB;
+      const dateFieldKey = findDateFieldKey();
+      let filteredData = allData;
+      if (dateObj && dateFieldKey) {
+        filteredData = allData.filter(item => {
+          const itemDateStr = getFieldValue(item, [dateFieldKey]);
+          if (!itemDateStr) return false;
+          let itemDate = parseDate(itemDateStr);
+          return itemDate && itemDate.getMonth() === dateObj.month && itemDate.getFullYear() === dateObj.year;
         });
-        
-        renderCards(sortedData);
-        return;
       }
-      
-      filterButtons.forEach(btn => {
-        if (btn.textContent === dateObj.label) {
-          btn.classList.add('active');
-        }
-      });
-      
-      const dateField = findDateField();
-      const filteredData = allData.filter(item => {
-        if (!item[dateField]) return false;
-        
-        let itemDate = parseDate(item[dateField]);
-        
-        return itemDate && 
-               itemDate.getMonth() === dateObj.month && 
-               itemDate.getFullYear() === dateObj.year;
-      });
-      
-      filteredData.sort((a, b) => {
-        const dateA = parseDate(a[dateField]);
-        const dateB = parseDate(b[dateField]);
-        
-        if (!dateA && !dateB) return 0;
-        if (!dateA) return 1;
-        if (!dateB) return -1;
-        
-        return dateA - dateB;
-      });
-      
-      renderCards(filteredData);
+      renderCards(sortDataByDate(filteredData, dateFieldKey));
+    }
+
+    function sortDataByDate(dataArray, dateFieldKey) {
+        if (!dateFieldKey) return dataArray;
+        return [...dataArray].sort((a, b) => {
+            const dateA = parseDate(getFieldValue(a, [dateFieldKey]));
+            const dateB = parseDate(getFieldValue(b, [dateFieldKey]));
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateB.getTime() - dateA.getTime();
+        });
     }
     
     function parseDate(dateStr) {
       if (!dateStr) return null;
-      
-      try {
-        if (dateStr instanceof Date) return dateStr;
-        
-        if (typeof dateStr === 'string') {
+      if (dateStr instanceof Date) return dateStr;
+      if (typeof dateStr === 'string') {
+        try {
           if (dateStr.includes('/')) {
             const parts = dateStr.split('/');
             if (parts.length === 3) {
-              return new Date(parts[2], parts[1]-1, parts[0]);
+              let d = new Date(parts[2], parts[1]-1, parts[0]);
+              if (isNaN(d.getTime())) d = new Date(parts[2], parts[0]-1, parts[1]);
+              return !isNaN(d.getTime()) ? d : null;
             } else if (parts.length === 2) {
-              const currentYear = new Date().getFullYear();
-              return new Date(currentYear, parts[1]-1, parts[0]);
+              const d = new Date(new Date().getFullYear(), parts[1]-1, parts[0]);
+              return !isNaN(d.getTime()) ? d : null;
             }
-          } else {
-            return new Date(dateStr);
+          } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+             const d = new Date(dateStr);
+             return !isNaN(d.getTime()) ? d : null;
           }
-        }
-      } catch (e) {
-        debug(`Erro ao analisar data: ${dateStr}`);
+          const d = new Date(dateStr);
+          return !isNaN(d.getTime()) ? d : null;
+        } catch (e) { debug(`Erro ao analisar data: ${dateStr} -> ${e.message}`); }
       }
-      
       return null;
+    }
+
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) return '';
+        return String(unsafe).replace(/[&<"']/g, m => ({ '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+
+    function getFieldValue(item, possibleKeys, defaultValue = undefined) {
+      for (const key of possibleKeys) {
+        if (item.hasOwnProperty(key) && item[key] !== null && item[key] !== undefined && String(item[key]).trim() !== '') {
+          return item[key];
+        }
+      }
+      return defaultValue;
+    }
+
+    function getSocialIcon(platform) {
+      if (!platform) return '';
+      platform = String(platform).toLowerCase();
+      if (platform.includes('instagram')) return '<i class="fab fa-instagram social-icon"></i>';
+      if (platform.includes('facebook')) return '<i class="fab fa-facebook social-icon"></i>';
+      if (platform.includes('tiktok')) return '<i class="fab fa-tiktok social-icon"></i>';
+      if (platform.includes('youtube')) return '<i class="fab fa-youtube social-icon"></i>';
+      return '';
+    }
+
+    function formatDisplayDate(dateValue) {
+        if (!dateValue) return 'N/A';
+        const dateObj = parseDate(dateValue);
+        return dateObj ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : escapeHtml(String(dateValue));
+    }
+
+    function renderSingleField(item, config) {
+        let fieldValue = getFieldValue(item, config.keys);
+        if (fieldValue === undefined && config.title !== 'Comentários:') return '';
+        
+        let displayValue = '';
+        if (config.isLink && typeof fieldValue === 'string' && (fieldValue.startsWith('http://') || fieldValue.startsWith('https://'))) {
+            displayValue = `<a href="${escapeHtml(fieldValue)}" target="_blank" class="link-field"><i class="fas fa-link"></i> ${escapeHtml(fieldValue)}</a>`;
+        } else if (config.isDate) {
+            displayValue = formatDisplayDate(fieldValue);
+        } else if (config.title === 'Comentários:') {
+            const commentsRaw = getFieldValue(item, config.keys, '');
+            let commentsArray = [];
+            if (typeof commentsRaw === 'string' && commentsRaw.trim() !== '') {
+                commentsArray = commentsRaw.split('\n');
+            } else if (Array.isArray(commentsRaw)){
+                commentsArray = commentsRaw;
+            }
+            displayValue = commentsArray.map(c => `<div class="comment-item">${escapeHtml(String(c))}</div>`).join('');
+            if (!displayValue && !item.hasOwnProperty(config.keys.find(k => item.hasOwnProperty(k)))) return '';
+        } else {
+            displayValue = escapeHtml(String(fieldValue));
+        }
+
+        return `
+          <div class="card-field-custom">
+            <div class="field-label-custom">${escapeHtml(config.title)}</div>
+            <div class="field-value-custom">${displayValue || (config.title === 'Comentários:' ? '(Sem comentários)' : 'N/A')}</div>
+          </div>`;
     }
 
     function renderCards(items) {
@@ -566,383 +448,167 @@
       container.innerHTML = '';
       
       if (!items || items.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-search"></i>
-            <h3>Nenhum registro encontrado</h3>
-            <p>Tente selecionar outro período ou verifique os dados.</p>
-          </div>
-        `;
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>Nenhum registro encontrado</h3><p>Tente selecionar outro período ou verifique os dados.</p></div>`;
         return;
       }
       
-      items.forEach(item => {
-        // Organiza os campos para melhorar a exibição
-        const importantFields = [
-          'Nome', 'Data', 'Data:', 'Status', 'Status:', 'Aprovação', 'Aprovação:',
-          'Assunto', 'Assunto:', 'Plataforma', 'Plataforma:', 'Observação', 'Observação:'
-        ];
-        
-        const organizedFields = [];
-        
-        // Primeiro adiciona os campos importantes
-        importantFields.forEach(field => {
-          for (const key in item) {
-            if (key === field || key.replace(':', '') === field) {
-              organizedFields.push([key, item[key]]);
-              break;
-            }
-          }
-        });
-        
-        // Depois adiciona os campos restantes que não são especiais
-        for (const [key, value] of Object.entries(item)) {
-          if (!importantFields.includes(key) && 
-              !importantFields.includes(key.replace(':', '')) && 
-              !['_row', 'comments', 'commentCount'].includes(key)) {
-            organizedFields.push([key, value]);
-          }
-        }
-        
-        // Encontra o campo de aprovação para estilo do card
-        const aprovacaoField = findAprovacaoField(item);
-        let aprovacaoClass = '';
-        if (aprovacaoField) {
-          const aprovacaoValue = (item[aprovacaoField] || '').toString().toLowerCase();
-          if (aprovacaoValue.includes('aprovado')) {
-            aprovacaoClass = 'aprovacao-aprovado';
-          } else if (aprovacaoValue.includes('reprovado')) {
-            aprovacaoClass = 'aprovacao-reprovado';
-          } else if (aprovacaoValue.includes('pendente')) {
-            aprovacaoClass = 'aprovacao-pendente';
-          } else if (aprovacaoValue.includes('em andamento')) {
-            aprovacaoClass = 'aprovacao-em-andamento';
-          }
-        }
-        
-        // Encontra o campo de plataforma para ícones
-        const platformField = findPlatformField(item);
-        let socialIcon = '';
-        if (platformField) {
-          const platform = (item[platformField] || '').toString().toLowerCase();
-          if (platform.includes('instagram')) {
-            socialIcon = '<i class="fab fa-instagram social-icon"></i>';
-          } else if (platform.includes('linkedin')) {
-            socialIcon = '<i class="fab fa-linkedin social-icon"></i>';
-          } else if (platform.includes('facebook')) {
-            socialIcon = '<i class="fab fa-facebook social-icon"></i>';
-          } else if (platform.includes('youtube')) {
-            socialIcon = '<i class="fab fa-youtube social-icon"></i>';
-          } else if (platform.includes('tiktok')) {
-            socialIcon = '<i class="fab fa-tiktok social-icon"></i>';
-          }
-        }
-        
-        // Cria o card
-        const card = document.createElement('div');
-        card.className = `card ${aprovacaoClass}`;
-        card.setAttribute('data-card-id', item._row);
-        
-        // Campo título (nome ou primeiro campo)
-        const titleField = findTitleField(item);
-        const titleText = titleField ? item[titleField] : (organizedFields[0] ? organizedFields[0][1] : 'Sem título');
-        
-        const cardHeader = document.createElement('div');
-        cardHeader.className = 'card-header';
-        cardHeader.innerHTML = `
-          <div class="card-title">${socialIcon}${titleText}</div>
-          <span class="expand-icon"></span>
-        `;
-        
-        function formatDateValue(key, value) {
-          const dateField = findDateField();
-          if (key === dateField && value) {
-            try {
-              const dateObj = parseDate(value);
-              if (dateObj) {
-                const day = dateObj.getDate().toString().padStart(2, '0');
-                const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-                return `${day}/${month}`;
-              }
-            } catch (e) {
-            }
-          }
-          return value || '';
-        }
-        
-        function formatFieldValue(key, value) {
-          if (!value) return '';
-          
-          if (typeof value === 'string' && 
-              (value.includes('drive.google.com') || 
-               value.includes('http://') || 
-               value.includes('https://'))) {
-            return `<a href="${value}" target="_blank" class="link-field">
-                     ${value.length > 30 ? value.substring(0, 30) + '...' : value}
-                     <i class="fas fa-external-link-alt"></i>
-                   </a>`;
-          }
-          
-          return formatDateValue(key, value);
-        }
-        
-        // Seleciona campos para preview (exibição no card fechado)
-        const previewFields = organizedFields.filter(field => 
-          !['Nome', titleField].includes(field[0]) && 
-          field[0] !== organizedFields[0][0]
-        ).slice(0, 5);
-        
-        const cardContent = document.createElement('div');
-        cardContent.className = 'card-content';
-        cardContent.innerHTML = `
-          <div class="card-preview">
-            ${previewFields.map(([key, value]) => `
-              <div class="card-field">
-                <div class="field-label">${key}:</div>
-                <div class="field-value-wrapper">
-                  <div class="field-value">${formatFieldValue(key, value)}</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="card-details">
-            ${organizedFields
-              .filter(([key]) => !previewFields.some(field => field[0] === key) && key !== titleField)
-              .map(([key, value]) => `
-                <div class="card-field">
-                  <div class="field-label">${key}:</div>
-                  <div class="field-value-wrapper">
-                    <div class="field-value">${formatFieldValue(key, value)}</div>
-                  </div>
-                </div>
-              `).join('')}
-            <div class="card-actions">
-              <button class="btn btn-success btn-evaluate" data-row="${item._row}" data-value="${item[aprovacaoField] || ''}">
-                <i class="fas fa-star"></i> Aprovação
-              </button>
-              <button class="btn btn-primary btn-comment" data-row="${item._row}" data-count="${item.commentCount || 0}">
-                <i class="fas fa-comment"></i> Comentar
-              </button>
-            </div>
-          </div>
-        `;
-        
-        cardContent.addEventListener('click', (e) => {
-          if (e.target.closest('.btn') || e.target.closest('a')) return;
-          
-          card.classList.toggle('expanded');
-        });
-        
-        card.appendChild(cardHeader);
-        card.appendChild(cardContent);
-        container.appendChild(card);
-      });
-      
-      addButtonEvents();
-    }
-    
-    function findTitleField(item) {
-      const possibleFields = ['Nome', 'Nome:', 'Título', 'Título:', 'Titulo', 'Titulo:'];
-      
-      for (const field of possibleFields) {
-        if (item[field] !== undefined) {
-          return field;
-        }
-      }
-      
-      return Object.keys(item)[0];
-    }
-    
-    function findAprovacaoField(item) {
-      const possibleFields = ['Aprovação', 'Aprovação:', 'Aprovacao', 'Aprovacao:', 'aprovacao', 'aprovação'];
-      
-      for (const field of possibleFields) {
-        if (item[field] !== undefined) {
-          return field;
-        }
-      }
-      
-      return null;
-    }
-    
-    function findStatusField(item) {
-      const possibleFields = ['Status', 'Status:', 'status', 'situacao', 'Situacao', 'Situação', 'situação'];
-      
-      for (const field of possibleFields) {
-        if (item[field] !== undefined) {
-          return field;
-        }
-      }
-      
-      return null;
-    }
-    
-    function findPlatformField(item) {
-      const possibleFields = ['Plataforma', 'Plataforma:', 'plataforma', 'Platform', 'platform', 'rede', 'Rede', 'redeSocial', 'RedeSocial'];
-      
-      for (const field of possibleFields) {
-        if (item[field] !== undefined) {
-          return field;
-        }
-      }
-      
-      for (const [key, value] of Object.entries(item)) {
-        if (value && typeof value === 'string') {
-          const lowerValue = value.toLowerCase();
-          if (lowerValue.includes('instagram') || 
-              lowerValue.includes('facebook') || 
-              lowerValue.includes('linkedin') || 
-              lowerValue.includes('youtube') || 
-              lowerValue.includes('tiktok')) {
-            return key;
-          }
-        }
-      }
-      
-      return null;
-    }
-    
-    function addButtonEvents() {
-      document.querySelectorAll('.btn-evaluate').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const row = btn.dataset.row;
-          const currentValue = btn.dataset.value;
-          
-          const novo = prompt('Avaliação:', currentValue || '');
-          if (novo === null) return;
-          
-          debug(`Enviando avaliação para linha ${row}, valor: ${novo}`);
-          
-          const data = {
-            action: 'updateI',
-            row: row,
-            value: novo
-          };
-          
-          fetch(WEB_APP, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          })
-          .then(response => {
-            debug(`Resposta recebida para avaliação`);
-            setTimeout(loadData, 1000);
-          })
-          .catch(error => {
-            debug(`Erro ao atualizar: ${error}`);
-          });
-        });
-      });
-      
-      document.querySelectorAll('.btn-comment').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const row = btn.dataset.row;
-          const commentCount = parseInt(btn.dataset.count) || 0;
-          
-          const commentsData = {
-            action: 'getComments',
-            row: row
-          };
-          
-          function showCommentsModal(comments = []) {
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
-            modal.style.display = 'flex';
-            modal.style.justifyContent = 'center';
-            modal.style.alignItems = 'center';
-            modal.style.zIndex = '1000';
-            
-            modal.innerHTML = `
-              <div style="background: white; width: 90%; max-width: 500px; border-radius: var(--border-radius); padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                  <h3 style="margin: 0;">Comentários</h3>
-                  <button id="closeModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
-                </div>
-                <div id="commentsList" style="margin-bottom: 1rem;">
-                  ${comments.length === 0 ? '<p>Nenhum comentário ainda.</p>' : ''}
-                  ${comments.map((comment, index) => `
-<div style="padding: 0.75rem; background-color: #f8f9fa; border-radius: 6px; margin-bottom: 0.5rem;">
-                      <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                        <strong>${comment.autor || 'Usuário'}</strong>
-                        <small style="color: var(--gray);">${comment.data || ''}</small>
-                      </div>
-                      <p style="margin: 0.25rem 0;">${comment.texto || ''}</p>
-                    </div>
-                  `).join('')}
-                </div>
-                <div>
-                  <textarea id="newComment" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: var(--border-radius); margin-bottom: 0.5rem; min-height: 100px;" placeholder="Digite seu comentário..."></textarea>
-                  <button id="sendComment" style="background-color: var(--primary); color: white; border: none; padding: 0.75rem 1rem; border-radius: var(--border-radius); cursor: pointer; font-weight: 500;">Enviar Comentário</button>
-                </div>
-              </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            document.getElementById('closeModal').addEventListener('click', () => {
-              document.body.removeChild(modal);
-            });
-            
-            document.getElementById('sendComment').addEventListener('click', () => {
-              const comment = document.getElementById('newComment').value.trim();
-              if (!comment) return;
-              
-              debug(`Enviando comentário para linha ${row}: ${comment}`);
-              
-              const data = {
-                action: 'addComment',
-                row: row,
-                comment: comment
-              };
-              
-              fetch(WEB_APP, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-              })
-              .then(response => {
-                debug(`Resposta recebida para comentário`);
-                document.body.removeChild(modal);
-                setTimeout(loadData, 1000);
-              })
-              .catch(error => {
-                debug(`Erro ao enviar comentário: ${error}`);
-              });
-            });
-          }
-          
-          fetch(WEB_APP + '?action=getComments&row=' + row)
-            .then(response => response.json())
-            .then(data => {
-              if (data && data.comments) {
-                showCommentsModal(data.comments);
-              } else {
-                showCommentsModal([]);
-              }
-            })
-            .catch(error => {
-              debug(`Erro ao carregar comentários: ${error}`);
-              showCommentsModal([]);
-            });
-        });
-      });
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      loadData();
-    });
+      const summaryFieldsConfig = [
+        { title: 'Status:', keys: ['Status', 'Status:'] },
+        { title: 'Assunto:', keys: ['Assunto', 'Assunto:'] },
+        { title: 'Observação:', keys: ['Observação', 'Observacao', 'Observacão'] }
+      ];
 
-    // Atualizar cards periodicamente
-    setInterval(loadData, 300000); // a cada 5 minutos
+      const detailFieldsConfig = [
+        { title: 'Aprovação:', keys: ['Aprovação', 'Aprovacao'] },
+        { title: 'Plataforma:', keys: ['Plataforma'] },
+        { title: 'Link do Drive:', keys: ['Link do Drive', 'Link Drive', 'Drive'], isLink: true },
+        { title: 'Comentários:', keys: ['comments', 'Comentários', 'Comentarios'] }
+      ];
+
+      items.forEach(item => {
+        const sheetRowId = item._row; // Usar _row diretamente para interações com a planilha
+        if (sheetRowId === undefined) {
+            debug(`Item sem _row: ${JSON.stringify(item)}`);
+            // return; // Pular renderização de cards sem _row ou tratar de outra forma
+        }
+
+        const aprovacaoStatus = getFieldValue(item, ['Aprovação', 'Aprovacao']);
+        const cardClass = `card ${aprovacaoStatus ? `aprovacao-${String(aprovacaoStatus).toLowerCase().replace(/[^a-z0-9-]/g, '')}` : ''}`.trim();
+        
+        let cardHtml = `<div class="${cardClass}" data-internal-id="${item._internalId}">`;
+
+        const plataforma = getFieldValue(item, ['Plataforma']);
+        const socialIconHtml = getSocialIcon(plataforma);
+        // O título do card é o campo 'Nome' ou 'Título' ou 'Assunto'
+        const cardTitleText = escapeHtml(getFieldValue(item, ['Nome', 'Título', 'Title', 'Assunto'], 'Card Sem Título'));
+        
+        cardHtml += `
+          <div class="card-header" data-sheet-row="${sheetRowId}">
+            <span class="card-title">${socialIconHtml}${cardTitleText}</span>
+            <i class="fas fa-chevron-down expand-icon"></i>
+          </div>`;
+
+        cardHtml += '<div class="card-content-wrapper">';
+        cardHtml += '<div class="card-summary">';
+
+        summaryFieldsConfig.forEach(config => {
+          cardHtml += renderSingleField(item, config);
+        });
+
+        const dataPostagem = getFieldValue(item, ['Data da Postagem', 'Data Postagem']);
+        const dataEntrega = getFieldValue(item, ['Data de Entrega', 'Data Entrega']);
+        cardHtml += `
+          <div class="card-field-custom dates-group">
+            <div class="date-pair">
+              <div class="date-item">
+                <div class="field-label-custom">Data da Postagem:</div>
+                <div class="field-value-custom">${formatDisplayDate(dataPostagem)}</div>
+              </div>
+              <div class="date-item">
+                <div class="field-label-custom">Data de Entrega:</div>
+                <div class="field-value-custom">${formatDisplayDate(dataEntrega)}</div>
+              </div>
+            </div>
+          </div>`;
+
+        cardHtml += '</div>'; 
+        cardHtml += '<div class="card-details">';
+
+        detailFieldsConfig.forEach(config => {
+          cardHtml += renderSingleField(item, config);
+        });
+        
+        cardHtml += `
+          <div class="card-actions">
+            <button class="btn-action btn-aprovacao" data-sheet-row="${sheetRowId}"><i class="fas fa-star"></i> Aprovação</button>
+            <button class="btn-action btn-comentar" data-sheet-row="${sheetRowId}"><i class="fas fa-comment"></i> Comentar</button>
+          </div>`;
+
+        cardHtml += '</div>';
+        cardHtml += '</div>';
+        cardHtml += '</div>';
+        container.innerHTML += cardHtml;
+      });
+
+      addCardEventListeners();
+    }
+
+    function addCardEventListeners() {
+        document.querySelectorAll('.card-header').forEach(header => {
+            header.addEventListener('click', function(event) {
+                const card = this.closest('.card');
+                if (!card) return;
+                
+                // Não expandir/retrair se o clique for em um link ou botão DENTRO do header (se houver)
+                // if (event.target.closest('a, button')) { return; }
+                
+                card.classList.toggle('expanded');
+            });
+        });
+
+        document.querySelectorAll('.btn-comentar').forEach(button => {
+            button.addEventListener('click', function() {
+                const sheetRowId = this.dataset.sheetRow;
+                if (!sheetRowId) {
+                    alert('ID da linha (sheetRow) não encontrado para adicionar comentário.');
+                    debug('Erro: Botão comentar clicado, mas data-sheet-row está faltando ou vazio.');
+                    return;
+                }
+                const commentText = prompt("Digite seu comentário:");
+                if (commentText !== null && commentText.trim() !== "") {
+                    const now = new Date();
+                    const formattedTimestamp = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} - ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}h: `;
+                    const fullComment = formattedTimestamp + commentText;
+                    sendDataToSheet({ action: 'addComment', row: sheetRowId, comment: fullComment });
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-aprovacao').forEach(button => {
+            button.addEventListener('click', function() {
+                const sheetRowId = this.dataset.sheetRow;
+                 if (!sheetRowId) {
+                    alert('ID da linha (sheetRow) não encontrado para atualizar aprovação.');
+                    debug('Erro: Botão aprovação clicado, mas data-sheet-row está faltando ou vazio.');
+                    return;
+                }
+                const newStatus = prompt("Digite o novo status de aprovação (ex: Aprovado, Reprovado, Pendente):");
+                if (newStatus !== null && newStatus.trim() !== "") {
+                    // No Apps Script, a função é updateColumnI, que espera 'value'
+                    sendDataToSheet({ action: 'updateI', row: sheetRowId, value: newStatus });
+                }
+            });
+        });
+    }
+
+    function sendDataToSheet(payload) {
+        debug(`Enviando para Apps Script: ${JSON.stringify(payload)}`);
+        
+        // O Apps Script espera um POST com JSON no corpo
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Importante para evitar erro de CORS com Apps Script simples
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json' // Embora no-cors, é boa prática
+            },
+            body: JSON.stringify(payload),
+            redirect: 'follow' // Necessário para Apps Script que redireciona após POST
+        })
+        .then(response => {
+            // Com mode: 'no-cors', a response é opaca, não podemos ler o status ou corpo diretamente.
+            // Assumimos sucesso se a requisição não gerar um erro de rede.
+            debug('Dados enviados para a planilha (resposta opaca devido a no-cors).');
+            alert('Ação enviada para a planilha. Pode ser necessário recarregar a página para ver as atualizações.');
+            // loadData(); // Opcional: recarregar dados. Pode ser disruptivo.
+        })
+        .catch(error => {
+            debug(`Erro ao enviar dados para Apps Script: ${error}`);
+            alert('Erro ao enviar dados para a planilha.');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
 </html>
