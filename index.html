@@ -240,11 +240,14 @@
       margin-bottom: 0.25rem; font-size: 0.9rem;
       white-space: nowrap; /* Não quebrar título da data */
     }
-    .field-value-custom {
-      word-break: break-word; display: block; font-size: 0.95rem; color: var(--text-color);
-      white-space: nowrap; /* Não quebrar valor da data */
-      overflow: visible; /* Esconder se muito grande */
-      text-overflow: ellipsis; /* Adicionar ... se muito grande */
+.field-value-custom {
+  word-break: break-word;
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  white-space: normal; /* Permitir quebra de linha */
+  overflow: visible;
+  text-overflow: ellipsis; /* Só funciona com overflow: hidden e white-space: nowrap */
     }
     .field-value-custom a.link-field {
       color: var(--primary-color); text-decoration: none; display: inline-flex;
