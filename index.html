@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Cards Interativo V9</title>
+  <title>Agenda de Tarefas PSR</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     :root {
       --primary-color: #4a90e2; 
       --primary-light: #7aa मिल्e9; 
-      --success-color: #28a745; /* Verde para Status Concluído */
-      --warning-color: #ffc107; /* Amarelo para Aprovação Pendente */
-      --accent-color: #f5a623; /* Laranja para piscar com vermelho */
-      --danger-color: #d0021b; /* Vermelho para Aprovação Reprovado e piscar */
+      --success-color: #28a745; 
+      --warning-color: #ffc107; 
+      --accent-color: #f5a623; 
+      --danger-color: #d0021b; 
+      --neutral-gray-color: #808080; /* Cinza para cancelado/suspenso */
       
       --light-gray: #f7f7f7;
       --medium-gray: #e0e0e0;
@@ -22,6 +23,9 @@
       --border-radius: 10px;
       --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+      --highlight-yellow: rgba(255, 255, 0, 0.3); /* Marca texto amarelo sutil */
+      --highlight-orange: rgba(255, 165, 0, 0.3); /* Marca texto laranja sutil */
     }
     
     body {
@@ -97,25 +101,38 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: var(--primary-color); /* Cor padrão Azul */
+      background-color: var(--primary-color); 
     }
     .card-header.header-status-concluido {
-        background-color: var(--success-color); /* Verde para Status Concluído */
+        background-color: var(--success-color);
     }
     .card-header.header-aprovacao-pendente {
-        background-color: var(--warning-color); /* Amarelo para Aprovação Pendente */
+        background-color: var(--warning-color); 
         color: var(--text-color); 
     }
     .card-header.header-aprovacao-reprovado {
-        background-color: var(--danger-color); /* Vermelho para Aprovação Reprovado */
+        background-color: var(--danger-color);
+    }
+    .card-header.header-status-critical-issue {
+        background-color: var(--neutral-gray-color);
+    }
+    .card-header.header-status-critical-issue .expand-icon::before {
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        content: "\f00d"; /* Ícone X */
     }
     
     .card-title {
-      display: flex; align-items: center; gap: 0.5rem; font-weight: bold;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 25px);
+      display: flex; align-items: center; gap: 0.3rem; /* Reduzido o gap para acomodar mais ícones */
+      font-weight: bold;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); /* Ajustado para ícone de X */
       font-size: 1.1rem;
     }
-    .social-icon { font-size: 1.1rem; margin-right: 0.25rem; flex-shrink: 0; }
+    .platform-icons-wrapper .social-icon { 
+        font-size: 1.1rem; 
+        margin-right: 0.2rem; /* Espaçamento entre múltiplos ícones */
+        flex-shrink: 0; 
+    }
     .expand-icon { transition: transform 0.3s ease; font-size: 1rem; }
     .card.expanded .expand-icon { transform: rotate(180deg); }
     
@@ -171,6 +188,9 @@
         border-radius: calc(var(--border-radius) - 4px);
         font-size: 0.9rem;
     }
+    .status-highlight-yellow { background-color: var(--highlight-yellow); padding: 0.1em 0.3em; border-radius: 3px; display: inline; }
+    .status-highlight-orange { background-color: var(--highlight-orange); padding: 0.1em 0.3em; border-radius: 3px; display: inline; }
+    .status-text-strike { text-decoration: line-through; }
 
     .dates-group .field-label-custom { margin-bottom: 0.4rem; }
     .dates-group .date-pair {
@@ -254,7 +274,7 @@
   </style>
 </head>
 <body>
-  <div class="header"><h1>Painel de Cards Interativo V9</h1></div>
+  <div class="header"><h1>Painel de Cards Interativo V10</h1></div>
   <div id="status">Carregando dados...</div>
   <div class="filters-container" id="filtersContainer">
   </div>
@@ -280,7 +300,7 @@
     let successModalTimeout;
 
     const FIELD_KEYS = {
-        TITLE: ['Nome', 'Título', 'Title', 'Assunto'],
+        TITLE: ['Título', 'Nome', 'Title', 'Assunto'], // Priorizando 'Título'
         STATUS: ['Status', 'Status:'],
         OBSERVACAO: ['Observação', 'Observacao', 'Observacão'],
         APROVACAO: ['Aprovação', 'Aprovacao'],
@@ -417,8 +437,16 @@
             const platformSelect = document.createElement('select');
             platformSelect.id = 'platformFilter';
             platformSelect.innerHTML = '<option value="">Todas as Plataformas</option>';
-            platforms.forEach(p => {
-                platformSelect.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
+            // Para filtros de plataforma, precisamos pegar todas as plataformas individuais
+            const allIndividualPlatforms = new Set();
+            allData.forEach(item => {
+                const platformValue = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
+                if (platformValue) {
+                    String(platformValue).split(',').forEach(p => allIndividualPlatforms.add(p.trim()));
+                }
+            });
+            Array.from(allIndividualPlatforms).sort().forEach(p => {
+                 if (p) platformSelect.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
             });
             platformSelect.addEventListener('change', (e) => {
                 activeFilters.platform = e.target.value || null;
@@ -446,7 +474,11 @@
         }
 
         if (activeFilters.platform) {
-            filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.PLATAFORMA) === activeFilters.platform);
+            filteredData = filteredData.filter(item => {
+                const itemPlatforms = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
+                if (!itemPlatforms) return false;
+                return String(itemPlatforms).split(',').map(p => p.trim()).includes(activeFilters.platform);
+            });
         }
         renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
     }
@@ -509,14 +541,41 @@
       return defaultValue;
     }
 
-    function getSocialIcon(platform) {
-      if (!platform) return '';
-      platform = String(platform).toLowerCase();
-      if (platform.includes('instagram')) return '<i class="fab fa-instagram social-icon"></i>';
-      if (platform.includes('facebook')) return '<i class="fab fa-facebook social-icon"></i>';
-      if (platform.includes('tiktok')) return '<i class="fab fa-tiktok social-icon"></i>';
-      if (platform.includes('youtube')) return '<i class="fab fa-youtube social-icon"></i>';
-      return '';
+    function getPlatformIconsHtml(platformString) {
+        if (!platformString) return '';
+        const platforms = String(platformString).split(',').map(p => p.trim().toLowerCase());
+        let iconsHtml = '';
+        const platformIconMap = {
+            'instagram': '<i class="fab fa-instagram social-icon"></i>',
+            'facebook': '<i class="fab fa-facebook social-icon"></i>',
+            'tiktok': '<i class="fab fa-tiktok social-icon"></i>',
+            'youtube': '<i class="fab fa-youtube social-icon"></i>',
+            'linkedin': '<i class="fab fa-linkedin social-icon"></i>',
+            'e-mail mkt': '<i class="fas fa-envelope-open-text social-icon"></i>', 
+            'email mkt': '<i class="fas fa-envelope-open-text social-icon"></i>', 
+            'newsletter': '<i class="fas fa-newspaper social-icon"></i>',
+            'comunicado': '<i class="fas fa-bullhorn social-icon"></i>',
+            // O caso 'todos' é mais complexo. Se 'todos' estiver presente, talvez mostrar um conjunto padrão ou um ícone genérico.
+            // Por ora, se 'todos' for a única plataforma, mostra um ícone genérico. Se estiver com outras, ignora 'todos'.
+        };
+
+        if (platforms.includes('todos') && platforms.length === 1) {
+            return '<i class="fas fa-globe social-icon"></i>'; // Ícone genérico para 'Todos'
+        }
+        if (platforms.includes('todos') && platforms.length > 1) {
+            // Se 'todos' está com outras, remove 'todos' para não duplicar ou confundir
+            const index = platforms.indexOf('todos');
+            if (index > -1) platforms.splice(index, 1);
+        }
+
+        const displayedIcons = new Set(); // Para evitar duplicar ícones se houver variações (e-mail mkt vs email mkt)
+        platforms.forEach(p => {
+            if (platformIconMap[p] && !displayedIcons.has(platformIconMap[p])) {
+                iconsHtml += platformIconMap[p];
+                displayedIcons.add(platformIconMap[p]);
+            }
+        });
+        return iconsHtml ? `<span class="platform-icons-wrapper">${iconsHtml}</span>` : '';
     }
 
     function formatDisplayDate(dateValue) {
@@ -544,6 +603,18 @@
             }
             displayValue = commentsArray.map(c => `<div class="comment-item">${escapeHtml(String(c))}</div>`).join('');
             if (!displayValue && !item.hasOwnProperty(config.keys.find(k => item.hasOwnProperty(k)))) return '';
+        } else if (config.keys.includes(FIELD_KEYS.STATUS[0])) { // Estilização especial para o campo Status
+            const statusText = escapeHtml(String(fieldValue));
+            const statusLower = String(fieldValue).toLowerCase();
+            if (statusLower === 'em andamento' || statusLower === 'na fila') {
+                displayValue = `<span class="status-highlight-yellow">${statusText}</span>`;
+            } else if (statusLower === 'pendente' || statusLower === 'aguardando resposta' || statusLower === 'parado') {
+                displayValue = `<span class="status-highlight-orange">${statusText}</span>`;
+            } else if (statusLower === 'cancelado') {
+                displayValue = `<span class="status-text-strike">${statusText}</span>`;
+            } else {
+                displayValue = statusText;
+            }
         } else {
             displayValue = escapeHtml(String(fieldValue));
         }
@@ -566,12 +637,12 @@
       
       const summaryFieldsConfig = [
         { title: 'Status:', keys: FIELD_KEYS.STATUS },
-        { title: 'Assunto:', keys: FIELD_KEYS.TITLE },
+        { title: 'Assunto:', keys: FIELD_KEYS.TITLE }, // Assunto não é o título do card, mas um campo do sumário
         { title: 'Observação:', keys: FIELD_KEYS.OBSERVACAO }
       ];
 
       const detailFieldsConfig = [
-        { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA },
+        { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA }, // Plataforma como texto nos detalhes
         { title: 'Link do Drive:', keys: FIELD_KEYS.LINK_DRIVE, isLink: true },
         { title: 'Comentários:', keys: FIELD_KEYS.COMENTARIOS }
       ];
@@ -590,33 +661,38 @@
         cardHeader.className = 'card-header';
         cardHeader.dataset.sheetRow = sheetRowId;
 
-        const statusValueForColor = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
-        const aprovacaoValueForColor = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
+        const statusValueForLogic = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
+        const aprovacaoValueForLogic = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
+        const criticalStatusTerms = ['cancelado', 'suspenso', 'excluído'];
+        let isCritical = criticalStatusTerms.includes(statusValueForLogic) || criticalStatusTerms.includes(aprovacaoValueForLogic);
 
-        cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue');
+        cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue', 'header-status-critical-issue');
 
-        if (statusValueForColor === 'concluido' || statusValueForColor === 'concluído') {
+        if (isCritical) {
+            cardHeader.classList.add('header-status-critical-issue');
+        } else if (statusValueForLogic === 'concluido' || statusValueForLogic === 'concluído') {
             cardHeader.classList.add('header-status-concluido');
-        } else if (aprovacaoValueForColor === 'pendente') {
+        } else if (aprovacaoValueForLogic === 'pendente') {
             cardHeader.classList.add('header-aprovacao-pendente');
-        } else if (aprovacaoValueForColor === 'reprovado') {
+        } else if (aprovacaoValueForLogic === 'reprovado') {
             cardHeader.classList.add('header-aprovacao-reprovado');
-        }
+        } // Senão, azul padrão
         
         const dataPostagemStr = getFieldValue(item, FIELD_KEYS.DATA_POSTAGEM);
         const dataPostagem = parseDate(dataPostagemStr);
-        if (dataPostagem && dataPostagem < today && statusValueForColor !== 'concluído' && statusValueForColor !== 'concluido') {
+        if (!isCritical && dataPostagem && dataPostagem < today && statusValueForLogic !== 'concluído' && statusValueForLogic !== 'concluido') {
             cardHeader.classList.add('blinking-overdue');
         }
         
-        const plataforma = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
-        const socialIconHtml = getSocialIcon(plataforma);
-        const cardTitleText = escapeHtml(getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título'));
+        const plataformaString = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
+        const platformIconsHtml = getPlatformIconsHtml(plataformaString);
+        const cardTitleText = escapeHtml(getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título')); // Título do card
         
         cardHeader.innerHTML = `
-            <span class="card-title">${socialIconHtml}${cardTitleText}</span>
-            <i class="fas fa-chevron-down expand-icon"></i>
+            <span class="card-title">${platformIconsHtml}${cardTitleText}</span>
+            <i class="fas ${isCritical ? '' : 'fa-chevron-down'} expand-icon"></i>
         `;
+        // Se for crítico, o ícone de X é tratado pelo CSS em .card-header.header-status-critical-issue .expand-icon::before
 
         const cardContentWrapper = document.createElement('div');
         cardContentWrapper.className = 'card-content-wrapper';
