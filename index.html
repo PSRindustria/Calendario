@@ -829,7 +829,7 @@
         const plataformaString = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
         const platformIconsHtml = getPlatformIconsHtml(plataformaString);
         const rawTitle = getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título');
-        const abbreviatedTitle = abbreviateText(String(rawTitle)); // Max length defaults to 30 in abbreviateText
+        const abbreviatedTitle = String(rawTitle); // Sem abreviação
         const cardTitleText = escapeHtml(toTitleCase(abbreviatedTitle));
         
         cardHeader.innerHTML = `
