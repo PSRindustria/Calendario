@@ -3,112 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Cards Interativo V4</title>
+  <title>Painel de Cards Interativo V9</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     :root {
-      --primary: #4361ee;
-      --primary-light: #4895ef;
-      --success: #4cc9f0; /* Azul claro para botão Aprovação */
-      --secondary: #3f37c9; /* Azul mais escuro para botão Comentar */
-      --warning: #f72585;
-      --light: #f8f9fa;
-      --dark: #212529;
-      --gray: #6c757d;
-      --border-radius: 8px;
-      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      --transition: all 0.3s ease;
+      --primary-color: #4a90e2; 
+      --primary-light: #7aa मिल्e9; 
+      --success-color: #28a745; /* Verde para Status Concluído */
+      --warning-color: #ffc107; /* Amarelo para Aprovação Pendente */
+      --accent-color: #f5a623; /* Laranja para piscar com vermelho */
+      --danger-color: #d0021b; /* Vermelho para Aprovação Reprovado e piscar */
+      
+      --light-gray: #f7f7f7;
+      --medium-gray: #e0e0e0;
+      --dark-gray: #666666;
+      --text-color: #333333;
+      --card-bg: #ffffff;
+      --border-radius: 10px;
+      --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 1200px;
+      font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 1.5rem;
-      background-color: #f0f2f5;
-      color: var(--dark);
+      padding: 2rem;
+      background-color: var(--light-gray);
+      color: var(--text-color);
+      line-height: 1.6;
     }
     
     .header h1 {
-      color: var(--primary);
-      font-size: 2.2rem;
-      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
       text-align: center;
+      font-weight: 500;
     }
     
     #status {
-      font-weight: 500;
-      color: var(--gray);
-      margin-bottom: 1rem;
+      font-weight: 400;
+      color: var(--dark-gray);
+      margin-bottom: 1.5rem;
       text-align: center;
     }
-    
-    .date-navigator {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 2rem;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+
+    .filters-container {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+        flex-wrap: wrap;
     }
-    
-    .date-btn {
-      background-color: white;
-      border: 1px solid var(--primary-light);
-      color: var(--primary);
-      border-radius: var(--border-radius);
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      transition: var(--transition);
+    .filters-container select {
+        padding: 0.6rem 1rem;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--medium-gray);
+        background-color: var(--card-bg);
+        color: var(--primary-color);
+        font-weight: 500;
+        cursor: pointer;
     }
-    .date-btn:hover { background-color: var(--primary-light); color: white; }
-    .date-btn.active { background-color: var(--primary); color: white; }
     
     .card-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+      gap: 1.5rem; 
     }
     
     .card {
-      background-color: white;
+      background-color: var(--card-bg);
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
       transition: var(--transition);
       overflow: hidden;
-      /* cursor: pointer; /* Removido para que o clique seja no header para expandir */
+      cursor: pointer;
     }
-    .card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+
+    @keyframes blink-header-effect {
+        0%, 100% { background-color: var(--danger-color); } 
+        50% { background-color: var(--accent-color); }    
+    }
+    .card-header.blinking-overdue {
+        animation: blink-header-effect 1.2s infinite;
+    }
     
     .card-header {
-      background-color: var(--primary);
-      color: white;
-      padding: 0.75rem 1rem;
+      color: white; 
+      padding: 1rem 1.25rem;
       font-weight: 500;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer; /* Adicionado para indicar que o header é clicável */
+      background-color: var(--primary-color); /* Cor padrão Azul */
     }
-    .card.aprovacao-aprovado .card-header { background-color: #28a745; }
-    .card.aprovacao-reprovado .card-header { background-color: #dc3545; }
-    .card.aprovacao-pendente .card-header, .card.aprovacao-em-andamento .card-header { background-color: #ffc107; color: #212529; }
+    .card-header.header-status-concluido {
+        background-color: var(--success-color); /* Verde para Status Concluído */
+    }
+    .card-header.header-aprovacao-pendente {
+        background-color: var(--warning-color); /* Amarelo para Aprovação Pendente */
+        color: var(--text-color); 
+    }
+    .card-header.header-aprovacao-reprovado {
+        background-color: var(--danger-color); /* Vermelho para Aprovação Reprovado */
+    }
     
     .card-title {
-      display: flex; align-items: center; gap: 6px; font-weight: bold;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); /* Ajuste para caber o ícone */
+      display: flex; align-items: center; gap: 0.5rem; font-weight: bold;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 25px);
+      font-size: 1.1rem;
     }
-    .social-icon { font-size: 18px; margin-right: 6px; flex-shrink: 0; }
-    .expand-icon { transition: transform 0.3s ease; }
+    .social-icon { font-size: 1.1rem; margin-right: 0.25rem; flex-shrink: 0; }
+    .expand-icon { transition: transform 0.3s ease; font-size: 1rem; }
     .card.expanded .expand-icon { transform: rotate(180deg); }
     
     .card-content-wrapper {
-      padding: 1rem;
+      padding: 1.25rem;
     }
 
     .card-summary, .card-details {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.85rem;
     }
 
     .card-details {
@@ -122,53 +140,62 @@
     }
 
     .card.expanded .card-details {
-      max-height: 1500px; /* Um valor grande o suficiente */
+      max-height: 2000px; 
       opacity: 1;
-      margin-top: 1rem; 
-      padding-top: 1rem;
-      border-top: 1px solid #eee;
+      margin-top: 1.25rem; 
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--medium-gray);
     }
     
     .card-field-custom {
       text-align: center;
     }
     .field-label-custom {
-      font-weight: bold; color: var(--dark); display: block;
-      margin-bottom: 0.3rem; font-size: 0.9em;
+      font-weight: 500; color: var(--dark-gray); display: block;
+      margin-bottom: 0.25rem; font-size: 0.9rem;
     }
     .field-value-custom {
-      word-break: break-word; display: block; font-size: 0.85em; color: var(--gray);
+      word-break: break-word; display: block; font-size: 0.95rem; color: var(--text-color);
     }
     .field-value-custom a.link-field {
-      color: var(--primary); text-decoration: none; display: inline-flex;
-      align-items: center; gap: 5px; justify-content: center;
+      color: var(--primary-color); text-decoration: none; display: inline-flex;
+      align-items: center; gap: 0.3rem; justify-content: center;
     }
-    .field-value-custom a.link-field:hover { text-decoration: underline; }
-    .field-value-custom div.comment-item { margin-bottom: 4px; text-align: left; white-space: pre-wrap; }
+    .field-value-custom a.link-field:hover { text-decoration: underline; color: var(--primary-light); }
+    .field-value-custom div.comment-item { 
+        margin-bottom: 0.5rem; 
+        text-align: left; 
+        white-space: pre-wrap; 
+        background-color: var(--light-gray);
+        padding: 0.5rem;
+        border-radius: calc(var(--border-radius) - 4px);
+        font-size: 0.9rem;
+    }
 
-    .dates-group .field-label-custom { margin-bottom: 0.5rem; }
+    .dates-group .field-label-custom { margin-bottom: 0.4rem; }
     .dates-group .date-pair {
         display: flex; 
         justify-content: space-around;
-        gap: 0.5rem;
+        gap: 1rem;
         text-align: center;
     }
     .dates-group .date-item {
         flex: 1;
     }
-    .dates-group .date-item .field-label-custom { font-size: 0.8em; margin-bottom: 0.1rem; }
-    .dates-group .date-item .field-value-custom { font-size: 0.8em; }
+    .dates-group .date-item .field-label-custom { font-size: 0.85rem; margin-bottom: 0.15rem; }
+    .dates-group .date-item .field-value-custom { font-size: 0.9rem; }
 
     .card-actions {
       display: flex;
-      justify-content: space-around;
+      justify-content: space-evenly; 
+      align-items: center; 
       gap: 1rem;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px dashed #eee;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px dashed var(--medium-gray);
     }
     .btn-action {
-      padding: 0.6rem 1.2rem;
+      padding: 0.7rem 1.4rem;
       border: none;
       border-radius: var(--border-radius);
       cursor: pointer;
@@ -177,41 +204,92 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.9em;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex-grow: 0; 
     }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
     .btn-action i { font-size: 1.1em; }
     .btn-aprovacao {
-      background-color: var(--success);
+      background-color: var(--primary-color); 
       color: white;
     }
-    .btn-aprovacao:hover { background-color: #3db8db; }
+    .btn-aprovacao:hover { background-color: var(--primary-light); }
     .btn-comentar {
-      background-color: var(--secondary);
+      background-color: var(--primary-color);
       color: white;
     }
-    .btn-comentar:hover { background-color: var(--primary); }
+    .btn-comentar:hover { background-color: var(--primary-light); }
 
-    .empty-state { text-align: center; padding: 2rem; background-color: white; border-radius: var(--border-radius); box-shadow: var(--shadow); grid-column: 1 / -1; }
-    .empty-state i { font-size: 3rem; color: var(--gray); margin-bottom: 1rem; }
-    .empty-state h3 { color: var(--gray); margin-bottom: 0.5rem; }
+    .empty-state { text-align: center; padding: 3rem; background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); grid-column: 1 / -1; }
+    .empty-state i { font-size: 3.5rem; color: var(--dark-gray); margin-bottom: 1.5rem; }
+    .empty-state h3 { color: var(--dark-gray); margin-bottom: 0.75rem; font-size: 1.5rem; font-weight: 500; }
     
     .debug-panel { margin-top: 2rem; padding: 1rem; border: 1px dashed #ccc; border-radius: var(--border-radius); display: none; background-color: #f8f9fa; }
     .debug-panel h3 { color: var(--gray); margin-top: 0; font-size: 1rem; }
     .debug-content { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 14px; }
+
+    .custom-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: flex; justify-content: center; align-items: center;
+        opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 1000;
+    }
+    .custom-modal-overlay.visible {
+        opacity: 1; visibility: visible;
+    }
+    .custom-modal {
+        background-color: white; padding: 2rem 2.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        text-align: center;
+        transform: scale(0.9); transition: transform 0.3s ease;
+    }
+    .custom-modal-overlay.visible .custom-modal {
+        transform: scale(1);
+    }
+    .custom-modal h3 { font-size: 1.4rem; color: var(--primary-color); margin-top: 0; margin-bottom: 0.75rem; }
+    .custom-modal p { font-size: 1rem; color: var(--text-color); margin-bottom: 1.5rem; }
+    .custom-modal .countdown { font-size: 0.9rem; color: var(--dark-gray); }
   </style>
 </head>
 <body>
-  <div class="header"><h1>Painel de Cards Interativo V4</h1></div>
+  <div class="header"><h1>Painel de Cards Interativo V9</h1></div>
   <div id="status">Carregando dados...</div>
-  <div class="date-navigator" id="dateFilter"></div>
+  <div class="filters-container" id="filtersContainer">
+  </div>
   <div id="cardContainer" class="card-container"></div>
   <div id="debug" class="debug-panel"><h3>Log de Depuração</h3><div class="debug-content"></div></div>
+
+  <div class="custom-modal-overlay" id="successModalOverlay">
+    <div class="custom-modal">
+        <h3 id="modalTitle">Sucesso!</h3>
+        <p id="modalMessage">Ação completada.</p>
+        <p class="countdown">Fechando em <span id="modalCountdown">2</span>s...</p>
+    </div>
+  </div>
 
   <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
     let allData = [];
-    let availableDates = [];
-    let currentDateFilter = null;
+    let activeFilters = {
+        month: null,
+        status: null,
+        platform: null
+    };
+    let successModalTimeout;
+
+    const FIELD_KEYS = {
+        TITLE: ['Nome', 'Título', 'Title', 'Assunto'],
+        STATUS: ['Status', 'Status:'],
+        OBSERVACAO: ['Observação', 'Observacao', 'Observacão'],
+        APROVACAO: ['Aprovação', 'Aprovacao'],
+        PLATAFORMA: ['Plataforma', 'Plataformas'],
+        LINK_DRIVE: ['Link do Drive', 'Link Drive', 'Drive'],
+        COMENTARIOS: ['comments', 'Comentários', 'Comentarios'],
+        DATA_POSTAGEM: ['Data da Postagem', 'Data Postagem', 'dataPostagem', 'Data', 'Data:'],
+        DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
+    };
 
     function debug(message) {
       const debugPanel = document.getElementById('debug');
@@ -223,14 +301,40 @@
       }
     }
 
+    function showSuccessModal(title, message, duration = 2000, callback) {
+        const overlay = document.getElementById('successModalOverlay');
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = message;
+        const countdownSpan = document.getElementById('modalCountdown');
+        
+        overlay.classList.add('visible');
+        
+        let secondsLeft = Math.floor(duration / 1000);
+        countdownSpan.textContent = secondsLeft;
+
+        clearTimeout(successModalTimeout);
+
+        const interval = setInterval(() => {
+            secondsLeft--;
+            countdownSpan.textContent = secondsLeft;
+            if (secondsLeft <= 0) {
+                clearInterval(interval);
+            }
+        }, 1000);
+
+        successModalTimeout = setTimeout(() => {
+            overlay.classList.remove('visible');
+            clearInterval(interval);
+            if (callback) callback();
+        }, duration);
+    }
+
     function loadData() {
       document.getElementById('status').textContent = 'Carregando dados...';
       window.handleDataCallback = function(items) {
-        allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) })); // _row é o ID da planilha
-        extractDates();
-        renderDateFilters();
-        const initialDateFilter = findInitialDateFilter();
-        filterByDate(initialDateFilter);
+        allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) }));
+        populateFilters();
+        applyFiltersAndRender();
         document.getElementById('status').textContent = `${allData.length} registros carregados.`;
         delete window.handleDataCallback;
       };
@@ -244,56 +348,107 @@
       };
     }
 
-    function findInitialDateFilter() {
-        if (availableDates.length === 0) return null;
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
-        let targetDateFilter = availableDates.find(d => d.year === currentYear && d.month === currentMonth);
-        if (!targetDateFilter) {
-            const sortedDates = [...availableDates].sort((a,b) => (b.year * 100 + b.month) - (a.year*100 + a.month));
-            targetDateFilter = sortedDates[0] || null;
-        }
-        return targetDateFilter;
-    }
-    
-    function extractDates() {
-      const dateFieldKey = findDateFieldKey();
-      if (!dateFieldKey) {
-        debug("Nenhum campo de data (postagem) identificado para filtro.");
-        availableDates = []; return;
-      }
-      const dateMap = {};
-      allData.forEach(item => {
-        const dateValueStr = getFieldValue(item, [dateFieldKey]);
-        if (dateValueStr) {
-          let dateValue = parseDate(dateValueStr);
-          if (dateValue && !isNaN(dateValue.getTime())) {
-            const month = dateValue.getMonth();
-            const year = dateValue.getFullYear();
-            const key = `${year}-${month}`;
-            if (!dateMap[key]) {
-              dateMap[key] = { year: year, month: month, label: getMonthName(month) + ' ' + year };
+    function getUniqueValues(fieldKeysArray) {
+        const values = new Set();
+        allData.forEach(item => {
+            const val = getFieldValue(item, fieldKeysArray);
+            if (val !== undefined && String(val).trim() !== '') {
+                values.add(String(val).trim());
             }
-          }
-        }
-      });
-      availableDates = Object.values(dateMap).sort((a, b) => (b.year * 100 + b.month) - (a.year * 100 + a.month));
+        });
+        return Array.from(values).sort();
     }
-    
-    function findDateFieldKey() {
-      if (allData.length === 0) return null;
-      const possibleKeys = ['Data da Postagem', 'Data Postagem', 'dataPostagem', 'Data', 'Data:', 'date', 'dt', 'dataCriacao', 'dataRegistro', 'dataEntrada'];
-      const firstItemKeys = Object.keys(allData[0]);
-      for (const pk of possibleKeys) {
-        if (firstItemKeys.includes(pk)) return pk;
-      }
-      for (const key of firstItemKeys) {
-        const value = allData[0][key];
-        if (value && typeof value === 'string' && (value.includes('/') || value.match(/^\d{4}-\d{2}-\d{2}/) || !isNaN(new Date(value).getTime()))) return key;
-        if (value instanceof Date) return key;
-      }
-      return null;
+
+    function getUniqueMonths() {
+        const dateMap = {};
+        allData.forEach(item => {
+            const dateValueStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
+            if (dateValueStr) {
+                let dateValue = parseDate(dateValueStr);
+                if (dateValue && !isNaN(dateValue.getTime())) {
+                    const month = dateValue.getMonth();
+                    const year = dateValue.getFullYear();
+                    const mapKey = `${year}-${String(month).padStart(2, '0')}`;
+                    if (!dateMap[mapKey]) {
+                        dateMap[mapKey] = { year: year, month: month, label: `${getMonthName(month)} ${year}`, sortKey: parseInt(`${year}${String(month).padStart(2, '0')}`) };
+                    }
+                }
+            }
+        });
+        return Object.values(dateMap).sort((a, b) => a.sortKey - b.sortKey);
+    }
+
+    function populateFilters() {
+        const filtersContainer = document.getElementById('filtersContainer');
+        filtersContainer.innerHTML = ''; 
+
+        const months = getUniqueMonths();
+        if (months.length > 0) {
+            const monthSelect = document.createElement('select');
+            monthSelect.id = 'monthFilter';
+            monthSelect.innerHTML = '<option value="">Todos os Meses</option>';
+            months.forEach(m => {
+                monthSelect.innerHTML += `<option value="${m.year}-${m.month}">${m.label}</option>`;
+            });
+            monthSelect.addEventListener('change', (e) => {
+                activeFilters.month = e.target.value || null;
+                applyFiltersAndRender();
+            });
+            filtersContainer.appendChild(monthSelect);
+        }
+
+        const statuses = getUniqueValues(FIELD_KEYS.STATUS);
+        if (statuses.length > 0) {
+            const statusSelect = document.createElement('select');
+            statusSelect.id = 'statusFilter';
+            statusSelect.innerHTML = '<option value="">Todos os Status</option>';
+            statuses.forEach(s => {
+                statusSelect.innerHTML += `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
+            });
+            statusSelect.addEventListener('change', (e) => {
+                activeFilters.status = e.target.value || null;
+                applyFiltersAndRender();
+            });
+            filtersContainer.appendChild(statusSelect);
+        }
+
+        const platforms = getUniqueValues(FIELD_KEYS.PLATAFORMA);
+        if (platforms.length > 0) {
+            const platformSelect = document.createElement('select');
+            platformSelect.id = 'platformFilter';
+            platformSelect.innerHTML = '<option value="">Todas as Plataformas</option>';
+            platforms.forEach(p => {
+                platformSelect.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
+            });
+            platformSelect.addEventListener('change', (e) => {
+                activeFilters.platform = e.target.value || null;
+                applyFiltersAndRender();
+            });
+            filtersContainer.appendChild(platformSelect);
+        }
+    }
+
+    function applyFiltersAndRender() {
+        let filteredData = [...allData];
+
+        if (activeFilters.month) {
+            const [year, month] = activeFilters.month.split('-').map(Number);
+            filteredData = filteredData.filter(item => {
+                const itemDateStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
+                if (!itemDateStr) return false;
+                let itemDate = parseDate(itemDateStr);
+                return itemDate && itemDate.getMonth() === month && itemDate.getFullYear() === year;
+            });
+        }
+
+        if (activeFilters.status) {
+            filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.STATUS) === activeFilters.status);
+        }
+
+        if (activeFilters.platform) {
+            filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.PLATAFORMA) === activeFilters.platform);
+        }
+        renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
     }
     
     function getMonthName(monthIndex) {
@@ -301,59 +456,15 @@
       return months[monthIndex];
     }
     
-    function renderDateFilters() {
-      const filterContainer = document.getElementById('dateFilter');
-      filterContainer.innerHTML = '';
-      if (availableDates.length === 0) return;
-
-      const allButton = document.createElement('button');
-      allButton.className = 'date-btn' + (currentDateFilter === null ? ' active' : '');
-      allButton.textContent = 'Todos';
-      allButton.onclick = () => filterByDate(null);
-      filterContainer.appendChild(allButton);
-
-      availableDates.forEach(dateObj => {
-        const btn = document.createElement('button');
-        btn.className = 'date-btn';
-        if (currentDateFilter && currentDateFilter.year === dateObj.year && currentDateFilter.month === dateObj.month) {
-          btn.classList.add('active');
-        }
-        btn.textContent = dateObj.label;
-        btn.onclick = () => filterByDate(dateObj);
-        filterContainer.appendChild(btn);
-      });
-    }
-    
-    function filterByDate(dateObj) {
-      currentDateFilter = dateObj;
-      document.querySelectorAll('#dateFilter .date-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtnLabel = dateObj ? dateObj.label : 'Todos';
-      document.querySelectorAll('#dateFilter .date-btn').forEach(btn => {
-        if (btn.textContent === activeBtnLabel) btn.classList.add('active');
-      });
-      
-      const dateFieldKey = findDateFieldKey();
-      let filteredData = allData;
-      if (dateObj && dateFieldKey) {
-        filteredData = allData.filter(item => {
-          const itemDateStr = getFieldValue(item, [dateFieldKey]);
-          if (!itemDateStr) return false;
-          let itemDate = parseDate(itemDateStr);
-          return itemDate && itemDate.getMonth() === dateObj.month && itemDate.getFullYear() === dateObj.year;
-        });
-      }
-      renderCards(sortDataByDate(filteredData, dateFieldKey));
-    }
-
-    function sortDataByDate(dataArray, dateFieldKey) {
-        if (!dateFieldKey) return dataArray;
+    function sortDataByGenericDate(dataArray, dateFieldKeys, ascending = true) {
+        if (!dateFieldKeys || dateFieldKeys.length === 0) return dataArray;
         return [...dataArray].sort((a, b) => {
-            const dateA = parseDate(getFieldValue(a, [dateFieldKey]));
-            const dateB = parseDate(getFieldValue(b, [dateFieldKey]));
+            const dateA = parseDate(getFieldValue(a, dateFieldKeys));
+            const dateB = parseDate(getFieldValue(b, dateFieldKeys));
             if (!dateA && !dateB) return 0;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            return dateB.getTime() - dateA.getTime();
+            if (!dateA) return ascending ? 1 : -1; 
+            if (!dateB) return ascending ? -1 : 1;
+            return ascending ? (dateA.getTime() - dateB.getTime()) : (dateB.getTime() - dateA.getTime()); 
         });
     }
     
@@ -362,22 +473,23 @@
       if (dateStr instanceof Date) return dateStr;
       if (typeof dateStr === 'string') {
         try {
+          let d = null;
           if (dateStr.includes('/')) {
             const parts = dateStr.split('/');
             if (parts.length === 3) {
-              let d = new Date(parts[2], parts[1]-1, parts[0]);
-              if (isNaN(d.getTime())) d = new Date(parts[2], parts[0]-1, parts[1]);
-              return !isNaN(d.getTime()) ? d : null;
+              d = new Date(parts[2], parseInt(parts[1])-1, parts[0]);
+              if (isNaN(d.getTime())) {
+                d = new Date(parts[2], parseInt(parts[0])-1, parts[1]);
+              }
             } else if (parts.length === 2) {
-              const d = new Date(new Date().getFullYear(), parts[1]-1, parts[0]);
-              return !isNaN(d.getTime()) ? d : null;
+              d = new Date(new Date().getFullYear(), parseInt(parts[1])-1, parts[0]);
             }
           } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
-             const d = new Date(dateStr);
-             return !isNaN(d.getTime()) ? d : null;
+             d = new Date(dateStr);
+          } else {
+            d = new Date(dateStr);
           }
-          const d = new Date(dateStr);
-          return !isNaN(d.getTime()) ? d : null;
+          return (d && !isNaN(d.getTime())) ? d : null;
         } catch (e) { debug(`Erro ao analisar data: ${dateStr} -> ${e.message}`); }
       }
       return null;
@@ -388,8 +500,8 @@
         return String(unsafe).replace(/[&<"']/g, m => ({ '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;' }[m]));
     }
 
-    function getFieldValue(item, possibleKeys, defaultValue = undefined) {
-      for (const key of possibleKeys) {
+    function getFieldValue(item, possibleKeysArray, defaultValue = undefined) {
+      for (const key of possibleKeysArray) {
         if (item.hasOwnProperty(key) && item[key] !== null && item[key] !== undefined && String(item[key]).trim() !== '') {
           return item[key];
         }
@@ -410,7 +522,7 @@
     function formatDisplayDate(dateValue) {
         if (!dateValue) return 'N/A';
         const dateObj = parseDate(dateValue);
-        return dateObj ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : escapeHtml(String(dateValue));
+        return dateObj ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
     }
 
     function renderSingleField(item, config) {
@@ -439,7 +551,7 @@
         return `
           <div class="card-field-custom">
             <div class="field-label-custom">${escapeHtml(config.title)}</div>
-            <div class="field-value-custom">${displayValue || (config.title === 'Comentários:' ? '(Sem comentários)' : 'N/A')}</div>
+            <div class="field-value-custom">${displayValue || (config.title === 'Comentários:' ? '<span style="color: var(--dark-gray); font-style: italic;">(Sem comentários)</span>' : 'N/A')}</div>
           </div>`;
     }
 
@@ -448,110 +560,126 @@
       container.innerHTML = '';
       
       if (!items || items.length === 0) {
-        container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>Nenhum registro encontrado</h3><p>Tente selecionar outro período ou verifique os dados.</p></div>`;
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Nenhum card para exibir</h3><p>Aplique outros filtros ou adicione novos itens.</p></div>`;
         return;
       }
       
       const summaryFieldsConfig = [
-        { title: 'Status:', keys: ['Status', 'Status:'] },
-        { title: 'Assunto:', keys: ['Assunto', 'Assunto:'] },
-        { title: 'Observação:', keys: ['Observação', 'Observacao', 'Observacão'] }
+        { title: 'Status:', keys: FIELD_KEYS.STATUS },
+        { title: 'Assunto:', keys: FIELD_KEYS.TITLE },
+        { title: 'Observação:', keys: FIELD_KEYS.OBSERVACAO }
       ];
 
       const detailFieldsConfig = [
-        { title: 'Aprovação:', keys: ['Aprovação', 'Aprovacao'] },
-        { title: 'Plataforma:', keys: ['Plataforma'] },
-        { title: 'Link do Drive:', keys: ['Link do Drive', 'Link Drive', 'Drive'], isLink: true },
-        { title: 'Comentários:', keys: ['comments', 'Comentários', 'Comentarios'] }
+        { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA },
+        { title: 'Link do Drive:', keys: FIELD_KEYS.LINK_DRIVE, isLink: true },
+        { title: 'Comentários:', keys: FIELD_KEYS.COMENTARIOS }
       ];
 
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
       items.forEach(item => {
-        const sheetRowId = item._row; // Usar _row diretamente para interações com a planilha
-        if (sheetRowId === undefined) {
-            debug(`Item sem _row: ${JSON.stringify(item)}`);
-            // return; // Pular renderização de cards sem _row ou tratar de outra forma
+        const sheetRowId = item._row;
+        
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        cardDiv.dataset.internalId = item._internalId;
+
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        cardHeader.dataset.sheetRow = sheetRowId;
+
+        const statusValueForColor = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
+        const aprovacaoValueForColor = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
+
+        cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue');
+
+        if (statusValueForColor === 'concluido' || statusValueForColor === 'concluído') {
+            cardHeader.classList.add('header-status-concluido');
+        } else if (aprovacaoValueForColor === 'pendente') {
+            cardHeader.classList.add('header-aprovacao-pendente');
+        } else if (aprovacaoValueForColor === 'reprovado') {
+            cardHeader.classList.add('header-aprovacao-reprovado');
         }
-
-        const aprovacaoStatus = getFieldValue(item, ['Aprovação', 'Aprovacao']);
-        const cardClass = `card ${aprovacaoStatus ? `aprovacao-${String(aprovacaoStatus).toLowerCase().replace(/[^a-z0-9-]/g, '')}` : ''}`.trim();
         
-        let cardHtml = `<div class="${cardClass}" data-internal-id="${item._internalId}">`;
-
-        const plataforma = getFieldValue(item, ['Plataforma']);
+        const dataPostagemStr = getFieldValue(item, FIELD_KEYS.DATA_POSTAGEM);
+        const dataPostagem = parseDate(dataPostagemStr);
+        if (dataPostagem && dataPostagem < today && statusValueForColor !== 'concluído' && statusValueForColor !== 'concluido') {
+            cardHeader.classList.add('blinking-overdue');
+        }
+        
+        const plataforma = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
         const socialIconHtml = getSocialIcon(plataforma);
-        // O título do card é o campo 'Nome' ou 'Título' ou 'Assunto'
-        const cardTitleText = escapeHtml(getFieldValue(item, ['Nome', 'Título', 'Title', 'Assunto'], 'Card Sem Título'));
+        const cardTitleText = escapeHtml(getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título'));
         
-        cardHtml += `
-          <div class="card-header" data-sheet-row="${sheetRowId}">
+        cardHeader.innerHTML = `
             <span class="card-title">${socialIconHtml}${cardTitleText}</span>
             <i class="fas fa-chevron-down expand-icon"></i>
-          </div>`;
+        `;
 
-        cardHtml += '<div class="card-content-wrapper">';
-        cardHtml += '<div class="card-summary">';
+        const cardContentWrapper = document.createElement('div');
+        cardContentWrapper.className = 'card-content-wrapper';
 
+        const cardSummary = document.createElement('div');
+        cardSummary.className = 'card-summary';
         summaryFieldsConfig.forEach(config => {
-          cardHtml += renderSingleField(item, config);
+          cardSummary.innerHTML += renderSingleField(item, config);
         });
 
-        const dataPostagem = getFieldValue(item, ['Data da Postagem', 'Data Postagem']);
-        const dataEntrega = getFieldValue(item, ['Data de Entrega', 'Data Entrega']);
-        cardHtml += `
+        const dataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
+        cardSummary.innerHTML += `
           <div class="card-field-custom dates-group">
             <div class="date-pair">
               <div class="date-item">
-                <div class="field-label-custom">Data da Postagem:</div>
-                <div class="field-value-custom">${formatDisplayDate(dataPostagem)}</div>
+                <div class="field-label-custom">Data de Entrega:</div>
+                <div class="field-value-custom">${formatDisplayDate(dataEntregaStr)}</div>
               </div>
               <div class="date-item">
-                <div class="field-label-custom">Data de Entrega:</div>
-                <div class="field-value-custom">${formatDisplayDate(dataEntrega)}</div>
+                <div class="field-label-custom">Data da Postagem:</div>
+                <div class="field-value-custom">${formatDisplayDate(dataPostagemStr)}</div>
               </div>
             </div>
           </div>`;
-
-        cardHtml += '</div>'; 
-        cardHtml += '<div class="card-details">';
-
+        
+        const cardDetails = document.createElement('div');
+        cardDetails.className = 'card-details';
+        cardDetails.innerHTML += renderSingleField(item, { title: 'Aprovação:', keys: FIELD_KEYS.APROVACAO });
         detailFieldsConfig.forEach(config => {
-          cardHtml += renderSingleField(item, config);
+          cardDetails.innerHTML += renderSingleField(item, config);
         });
         
-        cardHtml += `
+        cardDetails.innerHTML += `
           <div class="card-actions">
             <button class="btn-action btn-aprovacao" data-sheet-row="${sheetRowId}"><i class="fas fa-star"></i> Aprovação</button>
-            <button class="btn-action btn-comentar" data-sheet-row="${sheetRowId}"><i class="fas fa-comment"></i> Comentar</button>
+            <button class="btn-action btn-comentar" data-sheet-row="${sheetRowId}"><i class="fas fa-comment-dots"></i> Comentar</button>
           </div>`;
 
-        cardHtml += '</div>';
-        cardHtml += '</div>';
-        cardHtml += '</div>';
-        container.innerHTML += cardHtml;
+        cardContentWrapper.appendChild(cardSummary);
+        cardContentWrapper.appendChild(cardDetails);
+        cardDiv.appendChild(cardHeader);
+        cardDiv.appendChild(cardContentWrapper);
+        container.appendChild(cardDiv);
       });
 
       addCardEventListeners();
     }
 
     function addCardEventListeners() {
-        document.querySelectorAll('.card-header').forEach(header => {
-            header.addEventListener('click', function(event) {
-                const card = this.closest('.card');
-                if (!card) return;
-                
-                // Não expandir/retrair se o clique for em um link ou botão DENTRO do header (se houver)
-                // if (event.target.closest('a, button')) { return; }
-                
-                card.classList.toggle('expanded');
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(event) {
+                if (event.target.closest('a, button, .card-actions')) {
+                    return;
+                }
+                this.classList.toggle('expanded');
             });
         });
 
         document.querySelectorAll('.btn-comentar').forEach(button => {
             button.addEventListener('click', function() {
                 const sheetRowId = this.dataset.sheetRow;
-                if (!sheetRowId) {
-                    alert('ID da linha (sheetRow) não encontrado para adicionar comentário.');
-                    debug('Erro: Botão comentar clicado, mas data-sheet-row está faltando ou vazio.');
+                if (!sheetRowId || sheetRowId === "undefined") {
+                    showSuccessModal('Erro', 'ID da linha não encontrado para adicionar comentário.', 3000);
                     return;
                 }
                 const commentText = prompt("Digite seu comentário:");
@@ -559,7 +687,9 @@
                     const now = new Date();
                     const formattedTimestamp = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} - ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}h: `;
                     const fullComment = formattedTimestamp + commentText;
-                    sendDataToSheet({ action: 'addComment', row: sheetRowId, comment: fullComment });
+                    sendDataToSheet({ action: 'addComment', row: sheetRowId, comment: fullComment }, "Comentário adicionado com sucesso!", () => {
+                        loadData(); 
+                    });
                 }
             });
         });
@@ -567,44 +697,35 @@
         document.querySelectorAll('.btn-aprovacao').forEach(button => {
             button.addEventListener('click', function() {
                 const sheetRowId = this.dataset.sheetRow;
-                 if (!sheetRowId) {
-                    alert('ID da linha (sheetRow) não encontrado para atualizar aprovação.');
-                    debug('Erro: Botão aprovação clicado, mas data-sheet-row está faltando ou vazio.');
+                 if (!sheetRowId || sheetRowId === "undefined") {
+                    showSuccessModal('Erro', 'ID da linha não encontrado para atualizar aprovação.', 3000);
                     return;
                 }
                 const newStatus = prompt("Digite o novo status de aprovação (ex: Aprovado, Reprovado, Pendente):");
                 if (newStatus !== null && newStatus.trim() !== "") {
-                    // No Apps Script, a função é updateColumnI, que espera 'value'
-                    sendDataToSheet({ action: 'updateI', row: sheetRowId, value: newStatus });
+                    sendDataToSheet({ action: 'updateI', row: sheetRowId, value: newStatus }, "Status de aprovação atualizado!", () => {
+                        loadData(); 
+                    });
                 }
             });
         });
     }
 
-    function sendDataToSheet(payload) {
-        debug(`Enviando para Apps Script: ${JSON.stringify(payload)}`);
-        
-        // O Apps Script espera um POST com JSON no corpo
+    function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
         fetch(WEB_APP_URL, {
             method: 'POST',
-            mode: 'no-cors', // Importante para evitar erro de CORS com Apps Script simples
+            mode: 'no-cors', 
             cache: 'no-cache',
-            headers: {
-                'Content-Type': 'application/json' // Embora no-cors, é boa prática
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
-            redirect: 'follow' // Necessário para Apps Script que redireciona após POST
+            redirect: 'follow'
         })
         .then(response => {
-            // Com mode: 'no-cors', a response é opaca, não podemos ler o status ou corpo diretamente.
-            // Assumimos sucesso se a requisição não gerar um erro de rede.
-            debug('Dados enviados para a planilha (resposta opaca devido a no-cors).');
-            alert('Ação enviada para a planilha. Pode ser necessário recarregar a página para ver as atualizações.');
-            // loadData(); // Opcional: recarregar dados. Pode ser disruptivo.
+            showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
         })
         .catch(error => {
             debug(`Erro ao enviar dados para Apps Script: ${error}`);
-            alert('Erro ao enviar dados para a planilha.');
+            showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
         });
     }
 
