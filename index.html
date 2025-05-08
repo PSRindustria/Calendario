@@ -26,6 +26,7 @@
 
       --highlight-yellow: rgba(255, 255, 0, 0.3);
       --highlight-orange: rgba(255, 165, 0, 0.3);
+      --highlight-blue: rgba(0, 123, 255, 0.2); /* Azul claro para destaque */
     }
     
     body {
@@ -74,10 +75,11 @@
 
     .header h1 {
       color: var(--primary-color);
-      font-size: 2.5rem;
+      font-size: 2.8rem; /* Aumentado para mais presença */
       text-align: center;
-      font-weight: 500;
-      text-shadow: 0px 0px 8px rgba(255,255,255,0.7); /* Adicionado para melhor leitura sobre banner */
+      font-weight: 700; /* Aumentado para mais força */
+      text-shadow: 0px 1px 1px rgba(0,0,0,0.2), 0px 0px 10px rgba(255,255,255,0.9); /* Ajustado para mais destaque */
+      letter-spacing: 0.5px; /* Leve espaçamento para clareza */
     }
 
     @media (max-width: 768px) {
@@ -128,7 +130,8 @@
         padding: 1rem;
         border-radius: var(--border-radius);
     }
-    .filters-container select {
+    .filters-container select,
+    .filters-container .btn-filter-action {
         padding: 0.6rem 1rem;
         border-radius: var(--border-radius);
         border: 1px solid var(--medium-gray);
@@ -136,6 +139,20 @@
         color: var(--primary-color);
         font-weight: 500;
         cursor: pointer;
+        text-decoration: none; /* For <a> styled as button */
+        display: inline-flex; /* For <a> styled as button */
+        align-items: center; /* For <a> styled as button */
+        justify-content: center; /* For <a> styled as button */
+        font-family: inherit; /* Ensure button text matches select */
+        font-size: inherit; /* Ensure button text matches select */
+    }
+    .filters-container .btn-filter-action.clear-filter-btn {
+        background-color: var(--accent-color); /* Different color for clear button */
+        color: white;
+        border-color: var(--accent-color);
+    }
+    .filters-container .btn-filter-action:hover {
+        opacity: 0.8;
     }
     
     .card-container {
@@ -265,7 +282,27 @@
     }
     .status-highlight-yellow { background-color: var(--highlight-yellow); padding: 0.1em 0.3em; border-radius: 3px; display: inline; }
     .status-highlight-orange { background-color: var(--highlight-orange); padding: 0.1em 0.3em; border-radius: 3px; display: inline; }
+    .status-highlight-blue { background-color: var(--highlight-blue); padding: 0.1em 0.3em; border-radius: 3px; display: inline; color: var(--primary-color); font-weight: 500;}
     .status-text-strike { text-decoration: line-through; }
+
+    @keyframes blink-approval-warning-effect {
+        0%, 100% { background-color: var(--warning-color); color: var(--text-color); }
+        50% { background-color: var(--accent-color); color: var(--text-color); } 
+    }
+    .card-header.header-approval-warning-blinking {
+        animation: blink-approval-warning-effect 1.2s infinite;
+    }
+    .approval-pending-notice {
+        text-align: center;
+        font-weight: bold;
+        color: var(--warning-color); 
+        margin-bottom: 0.6rem;
+        font-size: 0.9em;
+        padding: 0.3rem;
+        background-color: rgba(255, 193, 7, 0.15); 
+        border-radius: 4px;
+        border: 1px solid var(--warning-color);
+    }
 
     .dates-group {
         border-radius: calc(var(--border-radius) - 4px);
@@ -401,6 +438,7 @@
     let activeFilters = {
         month: null,
         status: null,
+        aprovacao: null,
         platform: null
     };
     let successModalTimeout;
@@ -555,8 +593,21 @@
             });
             filtersContainer.appendChild(statusSelect);
         }
-
-        const platforms = getUniqueValues(FIELD_KEYS.PLATAFORMA);
+        // const aprovacoes = getUniqueValues(FIELD_KEYS.APROVACAO); // Removido para usar lista fixa
+        const aprovacaoStatusFixos = ["Aprovado", "Reprovado", "Pendente"]; // Lista fixa de status de aprovação
+        if (aprovacaoStatusFixos.length > 0) {
+            const aprovacaoSelect = document.createElement("select");
+            aprovacaoSelect.id = "aprovacaoFilter";
+            aprovacaoSelect.innerHTML = ",<option value=\"\">Todas as Aprovações</option>";
+            aprovacaoStatusFixos.forEach(a => {
+                aprovacaoSelect.innerHTML += `<option value="${escapeHtml(a.toLowerCase())}">${escapeHtml(a)}</option>`; // Usar toLowerCase para o value
+            });
+            aprovacaoSelect.addEventListener("change", (e) => {
+                activeFilters.aprovacao = e.target.value || null;
+                applyFiltersAndRender();
+            });
+            filtersContainer.appendChild(aprovacaoSelect);
+        }        const platforms = getUniqueValues(FIELD_KEYS.PLATAFORMA);
         if (platforms.length > 0) {
             const platformSelect = document.createElement('select');
             platformSelect.id = 'platformFilter';
@@ -577,6 +628,33 @@
             });
             filtersContainer.appendChild(platformSelect);
         }
+
+        // Botão Resultados
+        const resultadosBtn = document.createElement("a");
+        resultadosBtn.href = "#"; // Link vazio conforme solicitado
+        resultadosBtn.textContent = "Resultados";
+        resultadosBtn.className = "btn-filter-action";
+        filtersContainer.appendChild(resultadosBtn);
+
+        // Botão Limpar Filtros
+        const limparFiltrosBtn = document.createElement("button");
+        limparFiltrosBtn.textContent = "Limpar Filtros";
+        limparFiltrosBtn.className = "btn-filter-action clear-filter-btn";
+        limparFiltrosBtn.addEventListener("click", () => {
+            activeFilters.month = null;
+            activeFilters.status = null;
+            activeFilters.aprovacao = null;
+            activeFilters.platform = null;
+
+            // Resetar selects
+            const selects = filtersContainer.querySelectorAll("select");
+            selects.forEach(select => {
+                select.value = ""; 
+            });
+
+            applyFiltersAndRender();
+        });
+        filtersContainer.appendChild(limparFiltrosBtn);
     }
 
     function applyFiltersAndRender() {
@@ -594,6 +672,14 @@
 
         if (activeFilters.status) {
             filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.STATUS) === activeFilters.status);
+        }
+
+        if (activeFilters.aprovacao) {
+            const filterValue = activeFilters.aprovacao.toLowerCase(); // "aprovado", "reprovado", ou "pendente"
+            filteredData = filteredData.filter(item => {
+                const itemAprovacao = getFieldValue(item, FIELD_KEYS.APROVACAO, "").toLowerCase();
+                return itemAprovacao.startsWith(filterValue);
+            });
         }
 
         if (activeFilters.platform) {
@@ -700,10 +786,11 @@
             'tiktok': '<i class="fab fa-tiktok social-icon"></i>',
             'youtube': '<i class="fab fa-youtube social-icon"></i>',
             'linkedin': '<i class="fab fa-linkedin social-icon"></i>',
-            'e-mail mkt': '<i class="fas fa-envelope-open-text social-icon"></i>', 
-            'email mkt': '<i class="fas fa-envelope-open-text social-icon"></i>', 
+            'e-mail mkt': '<i class="fas fa-envelope-open-text social-icon"></i>',
+            'email mkt': '<i class="fas fa-envelope-open-text social-icon"></i>',
             'newsletter': '<i class="fas fa-newspaper social-icon"></i>',
             'comunicado': '<i class="fas fa-bullhorn social-icon"></i>',
+            'institucional': '<i class="fas fa-building social-icon"></i>' // Adicionado ícone para Institucional
         };
 
         if (platforms.includes('todos') && platforms.length === 1) {
@@ -736,7 +823,7 @@
         
         let displayValue = '';
         if (config.isLink && typeof fieldValue === 'string' && (fieldValue.startsWith('http://') || fieldValue.startsWith('https://'))) {
-            displayValue = `<a href="${escapeHtml(fieldValue)}" target="_blank" class="link-field"><i class="fas fa-link"></i> ${escapeHtml(fieldValue)}</a>`;
+            displayValue = `<a href="${escapeHtml(fieldValue)}" target="_blank" class="link-field"><i class="fas fa-link"></i> Clique Aqui</a>`;
         } else if (config.isDate) {
             displayValue = formatDisplayDate(fieldValue);
         } else if (config.title === 'Comentários:') {
@@ -752,11 +839,15 @@
         } else if (config.keys.includes(FIELD_KEYS.STATUS[0])) {
             const statusText = escapeHtml(String(fieldValue));
             const statusLower = String(fieldValue).toLowerCase();
-            if (statusLower === 'em andamento' || statusLower === 'na fila') {
+            const blueStatusTerms = ["programado", "postagem programada", "comunicado engatilhado", "comunicado programado", "entregue", "agendado"];
+
+            if (blueStatusTerms.includes(statusLower)) {
+                displayValue = `<span class="status-highlight-blue">${statusText}</span>`;
+            } else if (statusLower === "em andamento" || statusLower === "na fila") {
                 displayValue = `<span class="status-highlight-yellow">${statusText}</span>`;
-            } else if (statusLower === 'pendente' || statusLower === 'aguardando resposta' || statusLower === 'parado') {
+            } else if (statusLower === "pendente" || statusLower === "aguardando resposta" || statusLower === "parado") {
                 displayValue = `<span class="status-highlight-orange">${statusText}</span>`;
-            } else if (statusLower === 'cancelado') {
+            } else if (statusLower === "cancelado") {
                 displayValue = `<span class="status-text-strike">${statusText}</span>`;
             } else {
                 displayValue = statusText;
@@ -812,7 +903,7 @@
         const criticalStatusTerms = ['cancelado', 'suspenso', 'excluído'];
         let isCritical = criticalStatusTerms.includes(statusValueForLogic) || criticalStatusTerms.includes(aprovacaoValueForLogic);
 
-        cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue', 'header-status-critical-issue');
+        cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue', 'header-status-critical-issue', 'header-approval-warning-blinking');
 
         if (isCritical) {
             cardHeader.classList.add('header-status-critical-issue');
@@ -848,20 +939,36 @@
         cardSummary.className = 'card-summary';
 
         let approvalNoticeHtml = '';
-        // aprovacaoValueForLogic and statusValueForLogic are defined above this section in renderCards
+        // Logic for "Aprovação Pendente" warning and "Aprovado dia..." notice
+        const currentDataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA); // Renomeado para evitar conflito
+        const currentDataEntrega = parseDate(currentDataEntregaStr); // Renomeado e usa a variável renomeada
+        const aprovacaoOriginal = getFieldValue(item, FIELD_KEYS.APROVACAO, ''); // Get original value for display
+        // aprovacaoValueForLogic is already defined as String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
+        // today is already defined and set to midnight
+        // isCritical is also defined earlier
+        // statusValueForLogic is also defined earlier
 
-        if (aprovacaoValueForLogic === 'aprovado') {
-            cardDiv.classList.add('card-aprovado-background'); // Adiciona a classe para o fundo azul claro
-            
+        if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado")) { // Usa a variável renomeada
+            // Condition for "Aprovação Pendente"
+            if (!isCritical) { // Only blink if not already a critical status like "Cancelado"
+                 cardHeader.classList.add('header-approval-warning-blinking');
+            }
+            approvalNoticeHtml = `<div class="approval-pending-notice">Aprovação Pendente</div>`;
+        } else if (aprovacaoValueForLogic.startsWith('aprovado dia')) {
+            // Condition for "Aprovado dia..."
+            cardDiv.classList.add('card-aprovado-background');
             const finalStatusTerms = ['concluído', 'concluido', 'finalizado', 'postado'];
             if (!finalStatusTerms.includes(statusValueForLogic)) {
-                const now = new Date();
-                const day = String(now.getDate()).padStart(2, '0');
-                const month = String(now.getMonth() + 1).padStart(2, '0'); // Meses em JS são de 0 a 11
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                approvalNoticeHtml = `<div class="approval-status-notice">Aprovado para Postar/Divulgar</div>`;
+                // Display the full original "Aprovado dia DD/MM às XX:XXhoras"
+                approvalNoticeHtml = `<div class="approval-status-notice">${escapeHtml(aprovacaoOriginal)}</div>`;
             }
+        } else if (aprovacaoValueForLogic.startsWith('aprovado')) {
+            // Fallback for other "Aprovado" statuses if not "Aprovado dia..."
+             cardDiv.classList.add('card-aprovado-background');
+             const finalStatusTerms = ['concluído', 'concluido', 'finalizado', 'postado'];
+             if (!finalStatusTerms.includes(statusValueForLogic)) {
+                approvalNoticeHtml = `<div class="approval-status-notice">Aprovado (detalhes não formatados)</div>`;
+             }
         }
 
         let summaryFieldsGeneratedHtml = '';
@@ -958,9 +1065,16 @@
                     showSuccessModal('Erro', 'ID da linha não encontrado para atualizar aprovação.', 3000);
                     return;
                 }
-                const newStatus = prompt("Digite o novo status de aprovação (ex: Aprovado, Reprovado, Pendente):");
-                if (newStatus !== null && newStatus.trim() !== "") {
-                    sendDataToSheet({ action: 'updateI', row: sheetRowId, value: newStatus }, "Status de aprovação atualizado!", () => {
+                const newStatusPrompt = prompt("Digite o novo status de aprovação (ex: Aprovado, Reprovado, Pendente):");
+                if (newStatusPrompt !== null && newStatusPrompt.trim() !== "") {
+                    const now = new Date();
+                    const dia = String(now.getDate()).padStart(2, "0");
+                    const mes = String(now.getMonth() + 1).padStart(2, "0"); // Meses em JS são de 0 a 11
+                    const horas = String(now.getHours()).padStart(2, "0");
+                    const minutos = String(now.getMinutes()).padStart(2, "0");
+                    // Novo formato para gravação: "[Status] dia DD/MM às XX:XXhoras"
+                    const newStatusValue = `${newStatusPrompt.trim()} dia ${dia}/${mes} às ${horas}:${minutos}horas`;
+                    sendDataToSheet({ action: "updateI", row: sheetRowId, value: newStatusValue }, "Status de aprovação atualizado!", () => {
                         loadData(); 
                     });
                 }
