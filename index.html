@@ -292,6 +292,15 @@
     .card-header.header-approval-warning-blinking {
         animation: blink-approval-warning-effect 1.2s infinite;
     }
+
+    @keyframes blink-date-item-warning-effect {
+        0%, 100% { background-color: var(--light-gray); border: 1px solid var(--warning-color); }
+        50% { background-color: rgba(255, 193, 7, 0.25); border: 1px solid var(--accent-color); } /* Lighter yellow, accent border */
+    }
+    .date-item.date-item-blinking-warning {
+        animation: blink-date-item-warning-effect 1.2s infinite;
+    }
+
     .approval-pending-notice {
         text-align: center;
         font-weight: bold;
@@ -395,6 +404,12 @@
 
     .card.card-aprovado-background {
       background-color: #e6f3ff; /* Azul claro para card aprovado */
+    }
+    .card.card-reprovado-background {
+      background-color: #ffebee; /* Vermelho claro para card reprovado */
+    }
+    .card.card-pendente-background {
+      background-color: #fffde7; /* Amarelo bem claro para card pendente */
     }
 
     .approval-status-notice {
@@ -900,6 +915,17 @@
 
         const statusValueForLogic = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
         const aprovacaoValueForLogic = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
+
+        // Limpar classes de fundo anteriores do cardDiv e aplicar a nova baseada na aprovação
+        cardDiv.classList.remove('card-aprovado-background', 'card-reprovado-background', 'card-pendente-background');
+        if (aprovacaoValueForLogic.startsWith('reprovado')) {
+            cardDiv.classList.add('card-reprovado-background');
+        } else if (aprovacaoValueForLogic.startsWith('pendente')) {
+            cardDiv.classList.add('card-pendente-background');
+        } else if (aprovacaoValueForLogic.startsWith('aprovado')) { // Isso inclui "aprovado dia..."
+            cardDiv.classList.add('card-aprovado-background');
+        }
+
         const criticalStatusTerms = ['cancelado', 'suspenso', 'excluído'];
         let isCritical = criticalStatusTerms.includes(statusValueForLogic) || criticalStatusTerms.includes(aprovacaoValueForLogic);
 
@@ -909,9 +935,9 @@
             cardHeader.classList.add('header-status-critical-issue');
         } else if (statusValueForLogic === 'concluido' || statusValueForLogic === 'concluído') {
             cardHeader.classList.add('header-status-concluido');
-        } else if (aprovacaoValueForLogic === 'pendente') {
+        } else if (aprovacaoValueForLogic.startsWith('pendente')) { // Modificado para startsWith
             cardHeader.classList.add('header-aprovacao-pendente');
-        } else if (aprovacaoValueForLogic === 'reprovado') {
+        } else if (aprovacaoValueForLogic.startsWith('reprovado')) { // Modificado para startsWith
             cardHeader.classList.add('header-aprovacao-reprovado');
         }
         
@@ -982,8 +1008,14 @@
         
         let __dateItemsHtmlOutput = ''; // Using a very unique name
         if (dataEntregaStr !== undefined) {
+            let entregaDateItemClasses = "date-item date-item-entrega";
+            // Condition for blinking: delivery date is today or past, and not approved, and not a critical status
+            // This mirrors the condition for cardHeader.classList.add('header-approval-warning-blinking');
+            if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado") && !isCritical) {
+                entregaDateItemClasses += " date-item-blinking-warning";
+            }
             __dateItemsHtmlOutput += `
-              <div class="date-item">
+              <div class="${entregaDateItemClasses}">
                 <div class="field-label-custom">Data de Entrega:</div>
                 <div class="field-value-custom">${formatDisplayDate(dataEntregaStr)}</div>
               </div>`;
