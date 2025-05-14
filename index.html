@@ -473,30 +473,30 @@
         DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
     };
 
-    function showSuccessModal(title, message, duration = 2000, callback) {
+    function showSuccessModal(title, message, duration = 1000, callback) { // Duração padrão alterada para 1000ms
         const overlay = document.getElementById('successModalOverlay');
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
-        const countdownSpan = document.getElementById('modalCountdown');
+        // const countdownSpan = document.getElementById('modalCountdown'); // Linha do contador removida
         
         overlay.classList.add('visible');
         
-        let secondsLeft = Math.floor(duration / 1000);
-        countdownSpan.textContent = secondsLeft;
+        // let secondsLeft = Math.floor(duration / 1000); // Lógica do contador removida
+        // countdownSpan.textContent = secondsLeft; // Linha do contador removida
 
         clearTimeout(successModalTimeout);
 
-        const interval = setInterval(() => {
-            secondsLeft--;
-            countdownSpan.textContent = secondsLeft;
-            if (secondsLeft <= 0) {
-                clearInterval(interval);
-            }
-        }, 1000);
+        // const interval = setInterval(() => { // Lógica do contador removida
+        //     secondsLeft--; // Linha do contador removida
+        //     countdownSpan.textContent = secondsLeft; // Linha do contador removida
+        //     if (secondsLeft <= 0) { // Linha do contador removida
+        //         clearInterval(interval); // Linha do contador removida
+        //     }
+        // }, 1000);
 
         successModalTimeout = setTimeout(() => {
             overlay.classList.remove('visible');
-            clearInterval(interval);
+            // clearInterval(interval); // Linha do contador removida
             if (callback) callback();
         }, duration);
     }
