@@ -473,7 +473,7 @@
         DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
     };
 
-    function showSuccessModal(title, message, duration = 1000, callback) { // Duração padrão alterada para 1000ms
+    function showSuccessModal(title, message, duration = 500, callback) { // Duração padrão alterada para 1000ms
         const overlay = document.getElementById('successModalOverlay');
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
@@ -481,7 +481,7 @@
         
         overlay.classList.add('visible');
         
-        // let secondsLeft = Math.floor(duration / 1000); // Lógica do contador removida
+        // let secondsLeft = Math.floor(duration / 500); // Lógica do contador removida
         // countdownSpan.textContent = secondsLeft; // Linha do contador removida
 
         clearTimeout(successModalTimeout);
@@ -492,7 +492,7 @@
         //     if (secondsLeft <= 0) { // Linha do contador removida
         //         clearInterval(interval); // Linha do contador removida
         //     }
-        // }, 1000);
+        // }, 500);
 
         successModalTimeout = setTimeout(() => {
             overlay.classList.remove('visible');
@@ -1055,7 +1055,7 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
     window[cbName] = function(resp) {
         console.log("Retorno Apps Script:", resp);
         if (resp && resp.status === 'ok'){
-            showSuccessModal("Sucesso!", `${successMessageBase}`, 2000, callback);
+            showSuccessModal("Sucesso!", `${successMessageBase}`, 1000, callback);
         } else {
             showSuccessModal("Erro do Servidor", resp && resp.message ? resp.message : "Resposta inesperada do servidor.", 4000);
             console.error("Erro retornado pelo Apps Script:", resp);
