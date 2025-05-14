@@ -426,7 +426,6 @@
     };
     let successModalTimeout;
 
-    // SUA FUNÇÃO loadData AGORA FICA ASSIM:
     function loadData() {
       document.getElementById('status-messages').textContent = 'Carregando dados...';
       fetch('https://agenda-portal-2d149-default-rtdb.firebaseio.com/agenda.json')
@@ -436,9 +435,14 @@
             document.getElementById('status-messages').textContent = 'Nenhum dado encontrado.';
             return;
           }
-          // Firebase traz os dados como objeto, transformar em array
           let items = Object.values(json);
-          allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) }));
+          // Certifique-se de que _row (ID da linha da planilha) está presente nos dados do Firebase.
+          // O script do Apps Script já deve adicionar _row ao sincronizar com o Firebase.
+          allData = items.map(item => ({
+             ...item,
+             _internalId: item._internalId || Math.random().toString(36).substr(2, 9)
+             // _row deve vir do Firebase. Se não vier, as ações nos cards podem falhar ao identificar a linha.
+          }));
           populateFilters();
           const currentMonth = new Date().getMonth();
           const currentYear = new Date().getFullYear();
@@ -450,8 +454,9 @@
           }
           applyFiltersAndRender();
         })
-        .catch(() => {
-          document.getElementById('status-messages').textContent = 'Erro ao carregar dados.';
+        .catch((error) => {
+          console.error('Erro ao carregar dados do Firebase:', error);
+          document.getElementById('status-messages').textContent = 'Erro ao carregar dados. Verifique o console para detalhes.';
         });
     }
 
@@ -516,25 +521,6 @@
             statusMessagesDiv.classList.add('pending-tasks-message', 'blinking');
         } 
     }
-
-    // As funções abaixo seguem idênticas ao original:
-    // - getUniqueValues
-    // - getUniqueMonths
-    // - populateFilters
-    // - applyFiltersAndRender
-    // - getMonthName
-    // - sortDataByGenericDate
-    // - parseDate
-    // - escapeHtml
-    // - abbreviateText
-    // - toTitleCase
-    // - getFieldValue
-    // - getPlatformIconsHtml
-    // - formatDisplayDate
-    // - renderSingleField
-    // - renderCards
-    // - addCardEventListeners
-    // - sendDataToSheet
 
     function getUniqueValues(fieldKeysArray) {
         const values = new Set();
@@ -632,7 +618,7 @@
             filtersContainer.appendChild(platformSelect);
         }
         const resultadosBtn = document.createElement("a");
-        resultadosBtn.href = "#";
+        resultadosBtn.href = "#"; // Defina o link correto se necessário
         resultadosBtn.textContent = "Resultados";
         resultadosBtn.className = "btn-filter-action";
         filtersContainer.appendChild(resultadosBtn);
@@ -761,43 +747,42 @@
     function getPlatformIconsHtml(platformString) {
         if (!platformString) return '';
         const platforms = String(platformString).split(',').map(p => p.trim().toLowerCase());
-        let iconsHtml = '';
+        let iconsHtml = '<span class="platform-icons-wrapper">';
         const platformIconMap = {
-            'instagram': '<i class="fab fa-instagram social-icon"></i>',
-            'facebook': '<i class="fab fa-facebook social-icon"></i>',
-            'tiktok': '<i class="fab fa-tiktok social-icon"></i>',
-            'youtube': '<i class="fab fa-youtube social-icon"></i>',
-            'linkedin': '<i class="fab fa-linkedin social-icon"></i>',
-            'e-mail mkt': '<i class="fas fa-envelope-open-text social-icon"></i>',
-            'email mkt': '<i class="fas fa-envelope-open-text social-icon"></i>',
-            'newsletter': '<i class="fas fa-newspaper social-icon"></i>',
-            'comunicado': '<i class="fas fa-bullhorn social-icon"></i>',
-            'institucional': '<i class="fas fa-building social-icon"></i>'
+            'facebook': 'fab fa-facebook-square',
+            'instagram': 'fab fa-instagram',
+            'linkedin': 'fab fa-linkedin',
+            'twitter': 'fab fa-twitter-square',
+            'youtube': 'fab fa-youtube',
+            'tiktok': 'fab fa-tiktok',
+            'pinterest': 'fab fa-pinterest-square',
+            'blog': 'fas fa-blog',
+            'site': 'fas fa-globe',
+            'whatsapp': 'fab fa-whatsapp-square',
+            'telegram': 'fab fa-telegram',
+            'email': 'fas fa-envelope-square',
+            'google ads': 'fab fa-google',
+            'meta ads': 'fab fa-meta'
         };
-        if (platforms.includes('todos') && platforms.length === 1) {
-            return '<i class="fas fa-globe social-icon"></i>';
-        }
-        if (platforms.includes('todos')) {
-            const index = platforms.indexOf('todos');
-            if (index > -1) platforms.splice(index, 1);
-        }
-        const displayedIcons = new Set();
         platforms.forEach(p => {
-            if (platformIconMap[p] && !displayedIcons.has(platformIconMap[p])) {
-                iconsHtml += platformIconMap[p];
-                displayedIcons.add(platformIconMap[p]);
-            }
+            const iconClass = platformIconMap[p] || 'fas fa-question-circle'; 
+            iconsHtml += `<i class="${iconClass} social-icon" title="${escapeHtml(p)}"></i>`;
         });
-        return iconsHtml ? `<span class="platform-icons-wrapper">${iconsHtml}</span>` : '';
+        iconsHtml += '</span>';
+        return iconsHtml;
     }
-    function formatDisplayDate(dateValue) {
-        if (!dateValue) return 'N/A';
-        const dateObj = parseDate(dateValue);
-        return dateObj ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+    function formatDisplayDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        const d = parseDate(dateStr);
+        if (!d || isNaN(d.getTime())) return 'Data Inválida';
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
     function renderSingleField(item, config) {
-        let fieldValue = getFieldValue(item, config.keys);
-        if (fieldValue === undefined && config.title !== 'Comentários:') return '';
+        const fieldValue = getFieldValue(item, config.keys);
+        if (fieldValue === undefined && !config.keys.some(k => item.hasOwnProperty(k))) {
+             if (config.title === 'Comentários:') { /* não renderiza se a chave não existe */ } 
+             else { return ''; }
+        }
         let displayValue = '';
         if (config.isLink && typeof fieldValue === 'string' && (fieldValue.startsWith('http://') || fieldValue.startsWith('https://'))) {
             displayValue = `<a href="${escapeHtml(fieldValue)}" target="_blank" class="link-field"><i class="fas fa-link"></i> Clique Aqui</a>`;
@@ -857,13 +842,13 @@
       const today = new Date();
       today.setHours(0,0,0,0);
       items.forEach(item => {
-        const sheetRowId = item._row;
+        const itemRowId = item._row; // Este é o ID da linha da planilha, que deve vir do Firebase
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
         cardDiv.dataset.internalId = item._internalId;
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
-        cardHeader.dataset.sheetRow = sheetRowId;
+        // cardHeader.dataset.sheetRow = itemRowId; // Movido para os botões para garantir que está lá quando clicado
         const statusValueForLogic = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
         const aprovacaoValueForLogic = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
         cardDiv.classList.remove('card-aprovado-background', 'card-reprovado-background', 'card-pendente-background');
@@ -965,10 +950,11 @@
         detailFieldsConfig.forEach(config => {
           cardDetails.innerHTML += renderSingleField(item, config);
         });
+        // Adiciona o data-sheet-row diretamente nos botões
         cardDetails.innerHTML += `
           <div class="card-actions">
-            <button class="btn-action btn-aprovacao" data-sheet-row="${sheetRowId}"><i class="fas fa-star"></i> Aprovação</button>
-            <button class="btn-action btn-comentar" data-sheet-row="${sheetRowId}"><i class="fas fa-comment-dots"></i> Comentar</button>
+            <button class="btn-action btn-aprovacao" data-sheet-row="${itemRowId}"><i class="fas fa-star"></i> Aprovação</button>
+            <button class="btn-action btn-comentar" data-sheet-row="${itemRowId}"><i class="fas fa-comment-dots"></i> Comentar</button>
           </div>`;
         cardContentWrapper.appendChild(cardSummary);
         cardContentWrapper.appendChild(cardDetails);
@@ -989,17 +975,28 @@
         });
         document.querySelectorAll('.btn-comentar').forEach(button => {
             button.addEventListener('click', function() {
-                const sheetRowId = this.dataset.sheetRow;
-                if (!sheetRowId || sheetRowId === "undefined") {
+                const sheetRowIdFromDataset = this.dataset.sheetRow;
+                let sheetRowId;
+
+                if (sheetRowIdFromDataset && sheetRowIdFromDataset !== "undefined" && sheetRowIdFromDataset.trim() !== "") {
+                    sheetRowId = parseInt(sheetRowIdFromDataset, 10);
+                    if (isNaN(sheetRowId) || sheetRowId <= 1) { // Linhas da planilha geralmente começam em 2 (1 para cabeçalho)
+                        showSuccessModal('Erro', 'ID da linha inválido: ' + sheetRowIdFromDataset, 3000);
+                        console.error("ID da linha inválido após parseInt para comentário:", sheetRowIdFromDataset);
+                        return;
+                    }
+                } else {
                     showSuccessModal('Erro', 'ID da linha não encontrado para adicionar comentário.', 3000);
+                    console.error("ID da linha ausente ou inválido no dataset para comentário:", sheetRowIdFromDataset);
                     return;
                 }
+
                 const commentText = prompt("Digite seu comentário:");
                 if (commentText !== null && commentText.trim() !== "") {
                     const now = new Date();
                     const formattedTimestamp = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} - ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}h: `;
                     const fullComment = formattedTimestamp + commentText;
-                    sendDataToSheet({ action: 'addComment', row: sheetRowId, comment: fullComment }, "Comentário adicionado com sucesso!", () => {
+                    sendDataToSheet({ action: 'addComment', row: sheetRowId, comment: fullComment }, "Comentário enviado!", () => {
                         loadData(); 
                     });
                 }
@@ -1007,11 +1004,22 @@
         });
         document.querySelectorAll('.btn-aprovacao').forEach(button => {
             button.addEventListener('click', function() {
-                const sheetRowId = this.dataset.sheetRow;
-                 if (!sheetRowId || sheetRowId === "undefined") {
+                const sheetRowIdFromDataset = this.dataset.sheetRow;
+                let sheetRowId;
+
+                if (sheetRowIdFromDataset && sheetRowIdFromDataset !== "undefined" && sheetRowIdFromDataset.trim() !== "") {
+                    sheetRowId = parseInt(sheetRowIdFromDataset, 10);
+                    if (isNaN(sheetRowId) || sheetRowId <= 1) { // Linhas da planilha geralmente começam em 2
+                        showSuccessModal('Erro', 'ID da linha inválido: ' + sheetRowIdFromDataset, 3000);
+                        console.error("ID da linha inválido após parseInt para aprovação:", sheetRowIdFromDataset);
+                        return;
+                    }
+                } else {
                     showSuccessModal('Erro', 'ID da linha não encontrado para atualizar aprovação.', 3000);
+                    console.error("ID da linha ausente ou inválido no dataset para aprovação:", sheetRowIdFromDataset);
                     return;
                 }
+
                 const newStatusPrompt = prompt("Digite o novo status de aprovação (ex: Aprovado, Reprovado, Pendente):");
                 if (newStatusPrompt !== null && newStatusPrompt.trim() !== "") {
                     const now = new Date();
@@ -1019,7 +1027,7 @@
                     const mes = String(now.getMonth() + 1).padStart(2, "0");
                     const horas = String(now.getHours()).padStart(2, "0");
                     const minutos = String(now.getMinutes()).padStart(2, "0");
-                    const newStatusValue = `${newStatusPrompt.trim()} dia ${dia}/${mes} às ${horas}:${minutos}horas`;
+                    const newStatusValue = `${newStatusPrompt.trim()} dia ${dia}/${mes} às ${horas}:${minutos}h`;
                     sendDataToSheet({ action: "updateI", row: sheetRowId, value: newStatusValue }, "Status de aprovação atualizado!", () => {
                         loadData(); 
                     });
@@ -1028,37 +1036,37 @@
         });
     }
 function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
-    // Monta a URL da sua Web App do Apps Script
     const webAppBase = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
     const params = new URLSearchParams();
     params.set('action', payload.action);
-    params.set('row', payload.row);
+    params.set('row', payload.row); // Agora 'row' é um número
     if (payload.action === 'addComment') params.set('comment', payload.comment);
     if (payload.action === 'updateI') params.set('value', payload.value);
 
-    // JSONP callback handler único por chamada
     const cbName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 8);
 
-    // LOG: mostra no console para depuração
-    console.log('[sendDataToSheet] cbName', cbName);
-    console.log('[sendDataToSheet] params', params.toString());
+    console.log('[sendDataToSheet] Enviando para Apps Script. Callback:', cbName, 'Params:', params.toString());
 
-window[cbName] = function(resp) {
-    console.log("Retorno Apps Script:", resp);
-    alert("Resposta do servidor: " + JSON.stringify(resp));
-    showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
-    delete window[cbName];
-    script.remove();
-};
+    window[cbName] = function(resp) {
+        console.log("Retorno Apps Script:", resp);
+        if (resp && resp.status === 'ok'){
+            showSuccessModal("Sucesso!", `${successMessageBase}`, 2000, callback);
+        } else {
+            showSuccessModal("Erro do Servidor", resp && resp.message ? resp.message : "Resposta inesperada do servidor.", 4000);
+            console.error("Erro retornado pelo Apps Script:", resp);
+        }
+        delete window[cbName];
+        if (script && script.parentNode) script.remove(); // Garante que o script exista e tenha um pai antes de remover
+    };
     params.set('callback', cbName);
 
-    // Cria o script dinamicamente (JSONP)
     const script = document.createElement('script');
     script.src = `${webAppBase}?${params.toString()}`;
     script.onerror = function() {
-        alert('Erro ao conectar com o servidor Google Apps Script!');
-        script.remove();
-        delete window[cbName];
+        console.error('Erro ao conectar com o servidor Google Apps Script! URL:', script.src);
+        showSuccessModal('Erro de Conexão', 'Não foi possível conectar ao servidor do Google Apps Script.', 4000);
+        if (window[cbName]) delete window[cbName]; // Limpa o callback global em caso de erro de carregamento do script
+        if (script && script.parentNode) script.remove();
     };
     document.body.appendChild(script);
 }
