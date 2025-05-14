@@ -1038,7 +1038,13 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
 
     // JSONP callback handler único por chamada
     const cbName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 8);
+
+    // LOG: mostra no console para depuração
+    console.log('[sendDataToSheet] cbName', cbName);
+    console.log('[sendDataToSheet] params', params.toString());
+
     window[cbName] = function(resp) {
+        console.log('[sendDataToSheet] JSONP Callback:', resp);
         showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
         delete window[cbName];
         script.remove();
@@ -1048,6 +1054,11 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
     // Cria o script dinamicamente (JSONP)
     const script = document.createElement('script');
     script.src = `${webAppBase}?${params.toString()}`;
+    script.onerror = function() {
+        alert('Erro ao conectar com o servidor Google Apps Script!');
+        script.remove();
+        delete window[cbName];
+    };
     document.body.appendChild(script);
 }
     document.addEventListener('DOMContentLoaded', loadData);
