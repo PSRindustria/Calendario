@@ -473,7 +473,7 @@
         DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
     };
 
-    function showSuccessModal(title, message, duration = 1000, callback) {
+    function showSuccessModal(title, message, duration = 2000, callback) {
         const overlay = document.getElementById('successModalOverlay');
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
@@ -762,7 +762,11 @@
             'telegram': 'fab fa-telegram',
             'email': 'fas fa-envelope-square',
             'google ads': 'fab fa-google',
-            'meta ads': 'fab fa-meta'
+            'meta ads': 'fab fa-meta',
+            'institucional': 'fas fa-industry',
+            'comunicado': 'fas fa-bullhorn',
+            'e-mail mkt': 'fas fa-paper-plane',
+            'aniversario': 'fas fa-birthday-cake'
         };
         platforms.forEach(p => {
             const iconClass = platformIconMap[p] || 'fas fa-question-circle'; 
@@ -1036,7 +1040,7 @@
         });
     }
 function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
-    const webAppBase = 'https://script.google.com/macros/s/AKfycbz8q0sNKNA7JO_8NZw9_DGduOJ1qIExzbkSPSvHcedX/dev';
+    const webAppBase = 'https://script.google.com/macros/s/AKfycbzO7oR3CNBZD-NCnij7Xa-xScc09EWGU69uq81VDHPZmlmwjYJ4s_4rIYzy2Gp1iXvV/exec';
     const params = new URLSearchParams();
     params.set('action', payload.action);
     params.set('row', payload.row); // Agora 'row' é um número
@@ -1050,7 +1054,7 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
     window[cbName] = function(resp) {
         console.log("Retorno Apps Script:", resp);
         if (resp && resp.status === 'ok'){
-            showSuccessModal("Sucesso!", `${successMessageBase}`, 1000, callback);
+            showSuccessModal("Sucesso!", `${successMessageBase}`, 2000, callback);
         } else {
             showSuccessModal("Erro do Servidor", resp && resp.message ? resp.message : "Resposta inesperada do servidor.", 4000);
             console.error("Erro retornado pelo Apps Script:", resp);
