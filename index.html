@@ -473,7 +473,7 @@
         DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
     };
 
-    function showSuccessModal(title, message, duration = 2000, callback) {
+    function showSuccessModal(title, message, duration = 1000, callback) {
         const overlay = document.getElementById('successModalOverlay');
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
@@ -1050,7 +1050,7 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
     window[cbName] = function(resp) {
         console.log("Retorno Apps Script:", resp);
         if (resp && resp.status === 'ok'){
-            showSuccessModal("Sucesso!", `${successMessageBase}`, 2000, callback);
+            showSuccessModal("Sucesso!", `${successMessageBase}`, 1000, callback);
         } else {
             showSuccessModal("Erro do Servidor", resp && resp.message ? resp.message : "Resposta inesperada do servidor.", 4000);
             console.error("Erro retornado pelo Apps Script:", resp);
