@@ -1028,18 +1028,28 @@
         });
     }
 function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
-    fetch('https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
-    })
-    .catch(error => {
-        showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
-    });
+  console.log('🔀 Enviando para planilha:', payload);
+  fetch('https://script.google.com/macros/s/AKfy…/exec', {
+    method: 'POST',
+    mode: 'cors',                    // garantir CORS
+    cache: 'no-cache',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} – ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Resposta da planilha:', data);
+    showSuccessModal("Obrigado!", successMessageBase, 2000, callback);
+  })
+  .catch(error => {
+    console.error('❌ Erro ao enviar para a planilha:', error);
+    showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
+  });
 }
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
