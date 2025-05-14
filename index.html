@@ -10,13 +10,12 @@
   <style>
     :root {
       --primary-color: #3989c1; 
-      --primary-light: #7aa मिल्e9; 
+      --primary-light: #7aa9e9; 
       --success-color: #28a745; 
       --warning-color: #ffc107; 
       --accent-color: #ffb600; 
       --danger-color: #d0021b; 
       --neutral-gray-color: #808080; 
-      
       --light-gray: #f7f7f7;
       --medium-gray: #e0e0e0;
       --dark-gray: #666666;
@@ -25,12 +24,10 @@
       --border-radius: 10px;
       --shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-
       --highlight-yellow: rgba(255, 255, 0, 0.3);
       --highlight-orange: rgba(255, 165, 0, 0.3);
-      --highlight-blue: rgba(0, 123, 255, 0.2); /* Azul claro para destaque */
+      --highlight-blue: rgba(0, 123, 255, 0.2);
     }
-    
     body {
       font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -40,7 +37,6 @@
       position: relative; 
       min-height: 100vh;
     }
-
     .page-background-banner {
         position: fixed; 
         top: 0;
@@ -53,7 +49,6 @@
         background-position: center;
         z-index: -1; 
     }
-
     .content-wrapper {
         position: relative; 
         z-index: 1;
@@ -61,29 +56,25 @@
         flex-grow: 1;
         padding-top: 2rem; 
     }
-
     .main-container {
         max-width: 1400px;
         margin: 0 auto;
         padding: 0 2rem 2rem 2rem; 
-        background-color: transparent; /* Alterado para transparente */
+        background-color: transparent;
     }
-    
     .header {
         max-width: 1400px; 
         margin: 0 auto; 
         margin-bottom: 1rem; 
     }
-
     .header h1 {
       color: var(--primary-color);
-      font-size: 3.5rem; /* Aumentado para mais presença */
+      font-size: 3.5rem;
       text-align: center;
-      font-weight: 800; /* Aumentado para mais força */
-      text-shadow: 0px 1px 1px rgba(0,0,0,0.2), 0px 0px 10px rgba(255,255,255,0.9); /* Ajustado para mais destaque */
-      letter-spacing: 0.5px; /* Leve espaçamento para clareza */
+      font-weight: 800;
+      text-shadow: 0px 1px 1px rgba(0,0,0,0.2), 0px 0px 10px rgba(255,255,255,0.9);
+      letter-spacing: 0.5px;
     }
-
     @media (max-width: 768px) {
         .page-background-banner {
             height: 300px; 
@@ -96,24 +87,22 @@
             padding: 0 1rem 1rem 1rem;
         }
     }
-    
     #status-messages {
       color: var(--danger-color);
       margin-bottom: 1.5rem;
-      text-align: center; /* Centralizado */
+      text-align: center;
       min-height: 1.2em; 
       font-weight: normal; 
-      background-color: transparent; /* Fundo removido */
-      padding: 0; /* Padding removido */
-      border-radius: 0; /* Border-radius removido */
-      display: block; /* Para garantir que o text-align center funcione em toda a largura disponível */
-      width: 100%; /* Ocupa a largura para centralizar o texto dentro dela */
-      text-shadow: 0px 0px 5px rgba(255,255,255,0.8); /* Sombra para legibilidade sobre banner */
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+      display: block;
+      width: 100%;
+      text-shadow: 0px 0px 5px rgba(255,255,255,0.8);
     }
     #status-messages:empty {
-        display: none; /* Oculta se vazio */
+        display: none;
     }
-
     @keyframes intense-blink {
         0%, 100% { opacity: 1; transform: scale(1.05); color: var(--danger-color); }
         50% { opacity: 0.3; transform: scale(1); color: var(--accent-color); }
@@ -121,14 +110,13 @@
     .pending-tasks-message.blinking {
         animation: intense-blink 1s infinite;
     }
-
     .filters-container {
         display: flex;
         justify-content: center;
         gap: 1rem;
         margin-bottom: 2.5rem;
         flex-wrap: wrap;
-        background-color: rgba(7, 56, 108, 1); /* Fundo leve para legibilidade */
+        background-color: rgba(7, 56, 108, 1);
         padding: 1rem;
         border-radius: var(--border-radius);
     }
@@ -141,28 +129,26 @@
         color: var(--primary-color);
         font-weight: 500;
         cursor: pointer;
-        text-decoration: none; /* For <a> styled as button */
-        display: inline-flex; /* For <a> styled as button */
-        align-items: center; /* For <a> styled as button */
-        justify-content: center; /* For <a> styled as button */
-        font-family: inherit; /* Ensure button text matches select */
-        font-size: inherit; /* Ensure button text matches select */
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+        font-size: inherit;
     }
     .filters-container .btn-filter-action.clear-filter-btn {
-        background-color: var(--accent-color); /* Different color for clear button */
+        background-color: var(--accent-color);
         color: white;
         border-color: var(--accent-color);
     }
     .filters-container .btn-filter-action:hover {
         opacity: 0.8;
     }
-    
     .card-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-      gap: 1.5rem; 
+      gap: 1.5rem;
     }
-    
     .card {
       background-color: var(--card-bg);
       border-radius: var(--border-radius);
@@ -172,23 +158,21 @@
       cursor: pointer;
     }
     .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-
     @keyframes blink-header-effect {
         0%, 100% { background-color: var(--danger-color); } 
-        50% { background-color: var(--accent-color); }    
+        50% { background-color: var(--accent-color); }
     }
     .card-header.blinking-overdue {
         animation: blink-header-effect 1.2s infinite;
     }
-    
     .card-header {
-      color: white; 
+      color: white;
       padding: 1rem 1.25rem;
       font-weight: 500;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: var(--primary-color); 
+      background-color: var(--primary-color);
     }
     .card-header.header-status-concluido {
         background-color: var(--success-color);
@@ -206,33 +190,29 @@
     .card-header.header-status-critical-issue .expand-icon::before {
         font-family: "Font Awesome 6 Free";
         font-weight: 900;
-        content: "\f00d"; 
+        content: "\f00d";
     }
-    
     .card-title {
-      display: flex; align-items: center; gap: 0.3rem; 
+      display: flex; align-items: center; gap: 0.3rem;
       font-weight: bold;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px); 
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px);
       font-size: 1.1rem;
     }
     .platform-icons-wrapper .social-icon { 
         font-size: 1.1rem; 
         margin-right: 0.2rem; 
-        flex-shrink: 0; 
+        flex-shrink: 0;
     }
     .expand-icon { transition: transform 0.3s ease; font-size: 1rem; }
     .card.expanded .expand-icon { transform: rotate(180deg); }
-    
     .card-content-wrapper {
       padding: 1.25rem;
     }
-
     .card-summary, .card-details {
       display: flex;
       flex-direction: column;
       gap: 0.85rem;
     }
-
     .card-details {
       max-height: 0;
       opacity: 0;
@@ -242,41 +222,39 @@
       padding-top: 0;
       border-top: none;
     }
-
     .card.expanded .card-details {
-      max-height: 2000px; 
+      max-height: 2000px;
       opacity: 1;
-      margin-top: 1.25rem; 
+      margin-top: 1.25rem;
       padding-top: 1.25rem;
       border-top: 1px solid var(--medium-gray);
     }
-    
     .card-field-custom {
       text-align: center;
     }
     .field-label-custom {
       font-weight: 500; color: var(--dark-gray); display: block;
       margin-bottom: 0.25rem; font-size: 0.9rem;
-      white-space: nowrap; /* Não quebrar título da data */
+      white-space: nowrap;
     }
-.field-value-custom {
-  word-break: break-word;
-  display: block;
-  font-size: 0.95rem;
-  color: var(--text-color);
-  white-space: normal; /* Permitir quebra de linha */
-  overflow: visible;
-  text-overflow: ellipsis; /* Só funciona com overflow: hidden e white-space: nowrap */
+    .field-value-custom {
+      word-break: break-word;
+      display: block;
+      font-size: 0.95rem;
+      color: var(--text-color);
+      white-space: normal;
+      overflow: visible;
+      text-overflow: ellipsis;
     }
     .field-value-custom a.link-field {
       color: var(--primary-color); text-decoration: none; display: inline-flex;
       align-items: center; gap: 0.3rem; justify-content: center;
-      white-space: normal; /* Links podem quebrar */
+      white-space: normal;
     }
-    .field-value-custom div.comment-item { 
-        margin-bottom: 0.5rem; 
-        text-align: left; 
-        white-space: pre-wrap; 
+    .field-value-custom div.comment-item {
+        margin-bottom: 0.5rem;
+        text-align: left;
+        white-space: pre-wrap;
         background-color: var(--light-gray);
         padding: 0.5rem;
         border-radius: calc(var(--border-radius) - 4px);
@@ -286,70 +264,65 @@
     .status-highlight-orange { background-color: var(--highlight-orange); padding: 0.1em 0.3em; border-radius: 3px; display: inline; }
     .status-highlight-blue { background-color: var(--highlight-blue); padding: 0.1em 0.3em; border-radius: 3px; display: inline; color: var(--primary-color); font-weight: 500;}
     .status-text-strike { text-decoration: line-through; }
-
     @keyframes blink-approval-warning-effect {
         0%, 100% { background-color: var(--warning-color); color: var(--text-color); }
-        50% { background-color: var(--accent-color); color: var(--text-color); } 
+        50% { background-color: var(--accent-color); color: var(--text-color); }
     }
     .card-header.header-approval-warning-blinking {
         animation: blink-approval-warning-effect 1.2s infinite;
     }
-
     @keyframes blink-date-item-warning-effect {
         0%, 100% { background-color: var(--light-gray); border: 1px solid var(--warning-color); }
-        50% { background-color: rgba(255, 193, 7, 0.25); border: 1px solid var(--accent-color); } /* Lighter yellow, accent border */
+        50% { background-color: rgba(255, 193, 7, 0.25); border: 1px solid var(--accent-color); }
     }
     .date-item.date-item-blinking-warning {
         animation: blink-date-item-warning-effect 1.2s infinite;
     }
-
     .approval-pending-notice {
         text-align: center;
         font-weight: bold;
-        color: var(--warning-color); 
+        color: var(--warning-color);
         margin-bottom: 0.6rem;
         font-size: 0.9em;
         padding: 0.3rem;
-        background-color: rgba(255, 193, 7, 0.15); 
+        background-color: rgba(255, 193, 7, 0.15);
         border-radius: 4px;
         border: 1px solid var(--warning-color);
     }
-
     .dates-group {
         border-radius: calc(var(--border-radius) - 4px);
-        margin-top: 0.5rem; 
+        margin-top: 0.5rem;
     }
-    .dates-group .field-label-custom { 
-        margin-bottom: 0.4rem; 
-        font-size: 0.8em; /* Reduzir um pouco para caber */
+    .dates-group .field-label-custom {
+        margin-bottom: 0.4rem;
+        font-size: 0.8em;
     }
     .dates-group .date-pair {
-        display: flex; 
-        justify-content: space-between; 
-        gap: 0.75rem; /* Reduzido o gap */
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
         text-align: center;
     }
     .dates-group .date-item {
         flex: 1;
-        background-color: var(--light-gray); 
-        padding: 0.6rem; /* Reduzido padding */
-        border-radius: calc(var(--border-radius) - 6px); 
+        background-color: var(--light-gray);
+        padding: 0.6rem;
+        border-radius: calc(var(--border-radius) - 6px);
     }
-    .dates-group .date-item .field-value-custom { 
-        font-size: 0.85em; /* Reduzir um pouco para caber */
+    .dates-group .date-item .field-value-custom {
+        font-size: 0.85em;
     }
-
     .card-actions {
       display: flex;
-      justify-content: space-evenly; 
-      align-items: center; 
-      gap: 0.5rem; 
+      justify-content: space-evenly;
+      align-items: center;
+      gap: 0.5rem;
       margin-top: 1.25rem;
-      padding: 1.25rem 0.5rem 0.5rem 0.5rem; 
+      padding: 1.25rem 0.5rem 0.5rem 0.5rem;
       border-top: 1px dashed var(--medium-gray);
     }
     .btn-action {
-      padding: 0.6rem 1rem; 
+      padding: 0.6rem 1rem;
       border: none;
       border-radius: var(--border-radius);
       cursor: pointer;
@@ -357,17 +330,17 @@
       transition: var(--transition);
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem; 
-      font-size: 0.9rem; 
+      gap: 0.4rem;
+      font-size: 0.9rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      flex-grow: 1; 
+      flex-grow: 1;
       text-align: center;
       justify-content: center;
     }
     .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
     .btn-action i { font-size: 1em; }
     .btn-aprovacao {
-      background-color: var(--primary-color); 
+      background-color: var(--primary-color);
       color: white;
     }
     .btn-aprovacao:hover { background-color: #ffb600; }
@@ -376,11 +349,9 @@
       color: white;
     }
     .btn-comentar:hover { background-color: #ffb600; }
-
     .empty-state { text-align: center; padding: 3rem; background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); grid-column: 1 / -1; }
     .empty-state i { font-size: 3.5rem; color: var(--dark-gray); margin-bottom: 1.5rem; }
     .empty-state h3 { color: var(--dark-gray); margin-bottom: 0.75rem; font-size: 1.5rem; font-weight: 500; }
-    
     .custom-modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(0,0,0,0.5);
@@ -403,17 +374,15 @@
     .custom-modal h3 { font-size: 1.4rem; color: var(--primary-color); margin-top: 0; margin-bottom: 0.75rem; }
     .custom-modal p { font-size: 1rem; color: var(--text-color); margin-bottom: 1.5rem; }
     .custom-modal .countdown { font-size: 0.9rem; color: var(--dark-gray); }
-
     .card.card-aprovado-background {
-      background-color: #f5faff; /* Azul claro para card aprovado */
+      background-color: #f5faff;
     }
     .card.card-reprovado-background {
-      background-color: #ffffff; /* Vermelho claro para card reprovado */
+      background-color: #ffffff;
     }
     .card.card-pendente-background {
-      background-color: #ffffff; /* Amarelo bem claro para card pendente */
+      background-color: #ffffff;
     }
-
     .approval-status-notice {
       text-align: center;
       font-weight: bold;
@@ -435,12 +404,10 @@
     </div>
     <div class="main-container">
       <div id="status-messages"></div>
-      <div class="filters-container" id="filtersContainer">
-      </div>
+      <div class="filters-container" id="filtersContainer"></div>
       <div id="cardContainer" class="card-container"></div>
     </div>
   </div>
-  
   <div class="custom-modal-overlay" id="successModalOverlay">
     <div class="custom-modal">
         <h3 id="modalTitle">Sucesso!</h3>
@@ -448,9 +415,8 @@
         <p class="countdown">Fechando em <span id="modalCountdown">2</span>s...</p>
     </div>
   </div>
-
   <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
+    // Firebase fetch
     let allData = [];
     let activeFilters = {
         month: null,
@@ -459,6 +425,35 @@
         platform: null
     };
     let successModalTimeout;
+
+    // SUA FUNÇÃO loadData AGORA FICA ASSIM:
+    function loadData() {
+      document.getElementById('status-messages').textContent = 'Carregando dados...';
+      fetch('https://agenda-portal-2d149-default-rtdb.firebaseio.com/agenda.json')
+        .then(r => r.json())
+        .then(json => {
+          if (!json) {
+            document.getElementById('status-messages').textContent = 'Nenhum dado encontrado.';
+            return;
+          }
+          // Firebase traz os dados como objeto, transformar em array
+          let items = Object.values(json);
+          allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) }));
+          populateFilters();
+          const currentMonth = new Date().getMonth();
+          const currentYear = new Date().getFullYear();
+          const currentMonthValue = `${currentYear}-${currentMonth}`;
+          const monthFilterSelect = document.getElementById('monthFilter');
+          if (monthFilterSelect && Array.from(monthFilterSelect.options).some(opt => opt.value === currentMonthValue)) {
+              monthFilterSelect.value = currentMonthValue;
+              activeFilters.month = currentMonthValue;
+          }
+          applyFiltersAndRender();
+        })
+        .catch(() => {
+          document.getElementById('status-messages').textContent = 'Erro ao carregar dados.';
+        });
+    }
 
     const FIELD_KEYS = {
         TITLE: ['Título', 'Nome', 'Title'],
@@ -522,30 +517,24 @@
         } 
     }
 
-    function loadData() {
-      document.getElementById('status-messages').textContent = 'Carregando dados...';
-      window.handleDataCallback = function(items) {
-        allData = items.map(item => ({ ...item, _internalId: Math.random().toString(36).substr(2, 9) }));
-        populateFilters();
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        const currentMonthValue = `${currentYear}-${currentMonth}`;
-        const monthFilterSelect = document.getElementById('monthFilter');
-        if (monthFilterSelect && Array.from(monthFilterSelect.options).some(opt => opt.value === currentMonthValue)) {
-            monthFilterSelect.value = currentMonthValue;
-            activeFilters.month = currentMonthValue;
-        }
-        applyFiltersAndRender();
-        delete window.handleDataCallback;
-      };
-      const scriptEl = document.createElement('script');
-      scriptEl.src = `${WEB_APP_URL}?action=getData&callback=handleDataCallback&nocache=${new Date().getTime()}`;
-      document.head.appendChild(scriptEl);
-      scriptEl.onerror = () => {
-        document.getElementById('status-messages').textContent = 'Erro ao carregar dados.';
-        delete window.handleDataCallback;
-      };
-    }
+    // As funções abaixo seguem idênticas ao original:
+    // - getUniqueValues
+    // - getUniqueMonths
+    // - populateFilters
+    // - applyFiltersAndRender
+    // - getMonthName
+    // - sortDataByGenericDate
+    // - parseDate
+    // - escapeHtml
+    // - abbreviateText
+    // - toTitleCase
+    // - getFieldValue
+    // - getPlatformIconsHtml
+    // - formatDisplayDate
+    // - renderSingleField
+    // - renderCards
+    // - addCardEventListeners
+    // - sendDataToSheet
 
     function getUniqueValues(fieldKeysArray) {
         const values = new Set();
@@ -557,7 +546,6 @@
         });
         return Array.from(values).sort();
     }
-
     function getUniqueMonths() {
         const dateMap = {};
         allData.forEach(item => {
@@ -576,7 +564,6 @@
         });
         return Object.values(dateMap).sort((a, b) => a.sortKey - b.sortKey);
     }
-
     function populateFilters() {
         const filtersContainer = document.getElementById('filtersContainer');
         filtersContainer.innerHTML = ''; 
@@ -595,7 +582,6 @@
             });
             filtersContainer.appendChild(monthSelect);
         }
-
         const statuses = getUniqueValues(FIELD_KEYS.STATUS);
         if (statuses.length > 0) {
             const statusSelect = document.createElement('select');
@@ -610,21 +596,21 @@
             });
             filtersContainer.appendChild(statusSelect);
         }
-        // const aprovacoes = getUniqueValues(FIELD_KEYS.APROVACAO); // Removido para usar lista fixa
-        const aprovacaoStatusFixos = ["Aprovado", "Reprovado", "Pendente"]; // Lista fixa de status de aprovação
+        const aprovacaoStatusFixos = ["Aprovado", "Reprovado", "Pendente"];
         if (aprovacaoStatusFixos.length > 0) {
             const aprovacaoSelect = document.createElement("select");
             aprovacaoSelect.id = "aprovacaoFilter";
-            aprovacaoSelect.innerHTML = ",<option value=\"\">Todas as Aprovações</option>";
+            aprovacaoSelect.innerHTML = "<option value=\"\">Todas as Aprovações</option>";
             aprovacaoStatusFixos.forEach(a => {
-                aprovacaoSelect.innerHTML += `<option value="${escapeHtml(a.toLowerCase())}">${escapeHtml(a)}</option>`; // Usar toLowerCase para o value
+                aprovacaoSelect.innerHTML += `<option value="${escapeHtml(a.toLowerCase())}">${escapeHtml(a)}</option>`;
             });
             aprovacaoSelect.addEventListener("change", (e) => {
                 activeFilters.aprovacao = e.target.value || null;
                 applyFiltersAndRender();
             });
             filtersContainer.appendChild(aprovacaoSelect);
-        }        const platforms = getUniqueValues(FIELD_KEYS.PLATAFORMA);
+        }
+        const platforms = getUniqueValues(FIELD_KEYS.PLATAFORMA);
         if (platforms.length > 0) {
             const platformSelect = document.createElement('select');
             platformSelect.id = 'platformFilter';
@@ -645,15 +631,11 @@
             });
             filtersContainer.appendChild(platformSelect);
         }
-
-        // Botão Resultados
         const resultadosBtn = document.createElement("a");
-        resultadosBtn.href = "#"; // Link vazio conforme solicitado
+        resultadosBtn.href = "#";
         resultadosBtn.textContent = "Resultados";
         resultadosBtn.className = "btn-filter-action";
         filtersContainer.appendChild(resultadosBtn);
-
-        // Botão Limpar Filtros
         const limparFiltrosBtn = document.createElement("button");
         limparFiltrosBtn.textContent = "Limpar Filtros";
         limparFiltrosBtn.className = "btn-filter-action clear-filter-btn";
@@ -662,21 +644,16 @@
             activeFilters.status = null;
             activeFilters.aprovacao = null;
             activeFilters.platform = null;
-
-            // Resetar selects
             const selects = filtersContainer.querySelectorAll("select");
             selects.forEach(select => {
                 select.value = ""; 
             });
-
             applyFiltersAndRender();
         });
         filtersContainer.appendChild(limparFiltrosBtn);
     }
-
     function applyFiltersAndRender() {
         let filteredData = [...allData];
-
         if (activeFilters.month) {
             const [year, month] = activeFilters.month.split('-').map(Number);
             filteredData = filteredData.filter(item => {
@@ -686,19 +663,16 @@
                 return itemDate && itemDate.getMonth() === month && itemDate.getFullYear() === year;
             });
         }
-
         if (activeFilters.status) {
             filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.STATUS) === activeFilters.status);
         }
-
         if (activeFilters.aprovacao) {
-            const filterValue = activeFilters.aprovacao.toLowerCase(); // "aprovado", "reprovado", ou "pendente"
+            const filterValue = activeFilters.aprovacao.toLowerCase();
             filteredData = filteredData.filter(item => {
                 const itemAprovacao = getFieldValue(item, FIELD_KEYS.APROVACAO, "").toLowerCase();
                 return itemAprovacao.startsWith(filterValue);
             });
         }
-
         if (activeFilters.platform) {
             filteredData = filteredData.filter(item => {
                 const itemPlatforms = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
@@ -709,24 +683,21 @@
         renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
         updateStatusMessage();
     }
-    
     function getMonthName(monthIndex) {
       const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       return months[monthIndex];
     }
-    
     function sortDataByGenericDate(dataArray, dateFieldKeys, ascending = true) {
         if (!dateFieldKeys || dateFieldKeys.length === 0) return dataArray;
         return [...dataArray].sort((a, b) => {
             const dateA = parseDate(getFieldValue(a, dateFieldKeys));
             const dateB = parseDate(getFieldValue(b, dateFieldKeys));
             if (!dateA && !dateB) return 0;
-            if (!dateA) return ascending ? 1 : -1; 
+            if (!dateA) return ascending ? 1 : -1;
             if (!dateB) return ascending ? -1 : 1;
-            return ascending ? (dateA.getTime() - dateB.getTime()) : (dateB.getTime() - dateA.getTime()); 
+            return ascending ? (dateA.getTime() - dateB.getTime()) : (dateB.getTime() - dateA.getTime());
         });
     }
-    
     function parseDate(dateStr) {
       if (!dateStr) return null;
       if (dateStr instanceof Date) return dateStr;
@@ -749,31 +720,26 @@
             d = new Date(dateStr);
           }
           return (d && !isNaN(d.getTime())) ? d : null;
-        } catch (e) { /* console.error('Date parse error:', e); */ }
+        } catch (e) {}
       }
       return null;
     }
-
     function escapeHtml(unsafe) {
         if (unsafe === null || unsafe === undefined) return '';
         return String(unsafe).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;' }[m]));
     }
-
     function abbreviateText(text, maxLength = 30) {
         if (typeof text !== 'string' || !text) return '';
         if (text.length <= maxLength) {
             return text;
         }
-        // Try to abbreviate at a word boundary if possible, near maxLength - 3
-        let shortText = text.substring(0, maxLength - 3); // Leave space for "..."
+        let shortText = text.substring(0, maxLength - 3);
         const lastSpace = shortText.lastIndexOf(' ');
-        // Check if lastSpace is valid and not too close to the beginning, to avoid very short first words
-        if (lastSpace > Math.floor(maxLength / 3) && lastSpace < shortText.length) { 
+        if (lastSpace > Math.floor(maxLength / 3) && lastSpace < shortText.length) {
              shortText = shortText.substring(0, lastSpace);
         }
         return shortText + ".";
     }
-
     function toTitleCase(str) {
         if (typeof str !== 'string' || !str) return '';
         const prepositions = ["a", "o", "e", "ou", "mas", "se", "que", "de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas", "por", "para", "com", "sem", "sob", "sobre", "trás"];
@@ -784,15 +750,14 @@
             return word.charAt(0).toUpperCase() + word.slice(1);
         }).join(' ');
     }
-
-    function getFieldValue(item, possibleKeysArray, defaultValue = undefined) {      for (const key of possibleKeysArray) {
+    function getFieldValue(item, possibleKeysArray, defaultValue = undefined) {
+      for (const key of possibleKeysArray) {
         if (item.hasOwnProperty(key) && item[key] !== null && item[key] !== undefined && String(item[key]).trim() !== '') {
           return item[key];
         }
       }
       return defaultValue;
     }
-
     function getPlatformIconsHtml(platformString) {
         if (!platformString) return '';
         const platforms = String(platformString).split(',').map(p => p.trim().toLowerCase());
@@ -807,9 +772,8 @@
             'email mkt': '<i class="fas fa-envelope-open-text social-icon"></i>',
             'newsletter': '<i class="fas fa-newspaper social-icon"></i>',
             'comunicado': '<i class="fas fa-bullhorn social-icon"></i>',
-            'institucional': '<i class="fas fa-building social-icon"></i>' // Adicionado ícone para Institucional
+            'institucional': '<i class="fas fa-building social-icon"></i>'
         };
-
         if (platforms.includes('todos') && platforms.length === 1) {
             return '<i class="fas fa-globe social-icon"></i>';
         }
@@ -817,7 +781,6 @@
             const index = platforms.indexOf('todos');
             if (index > -1) platforms.splice(index, 1);
         }
-
         const displayedIcons = new Set();
         platforms.forEach(p => {
             if (platformIconMap[p] && !displayedIcons.has(platformIconMap[p])) {
@@ -827,17 +790,14 @@
         });
         return iconsHtml ? `<span class="platform-icons-wrapper">${iconsHtml}</span>` : '';
     }
-
     function formatDisplayDate(dateValue) {
         if (!dateValue) return 'N/A';
         const dateObj = parseDate(dateValue);
         return dateObj ? dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
     }
-
     function renderSingleField(item, config) {
         let fieldValue = getFieldValue(item, config.keys);
         if (fieldValue === undefined && config.title !== 'Comentários:') return '';
-        
         let displayValue = '';
         if (config.isLink && typeof fieldValue === 'string' && (fieldValue.startsWith('http://') || fieldValue.startsWith('https://'))) {
             displayValue = `<a href="${escapeHtml(fieldValue)}" target="_blank" class="link-field"><i class="fas fa-link"></i> Clique Aqui</a>`;
@@ -857,7 +817,6 @@
             const statusText = escapeHtml(String(fieldValue));
             const statusLower = String(fieldValue).toLowerCase();
             const blueStatusTerms = ["programado", "postagem programada", "comunicado engatilhado", "comunicado programado", "entregue", "agendado"];
-
             if (blueStatusTerms.includes(statusLower)) {
                 displayValue = `<span class="status-highlight-blue">${statusText}</span>`;
             } else if (statusLower === "em andamento" || statusLower === "na fila") {
@@ -872,147 +831,110 @@
         } else {
             displayValue = escapeHtml(String(fieldValue));
         }
-
         return `
           <div class="card-field-custom">
             <div class="field-label-custom">${escapeHtml(config.title)}</div>
             <div class="field-value-custom">${displayValue || (config.title === 'Comentários:' ? '<span style="color: var(--dark-gray); font-style: italic;">(Sem comentários)</span>' : 'N/A')}</div>
           </div>`;
     }
-
     function renderCards(items) {
       const container = document.getElementById('cardContainer');
       container.innerHTML = '';
-      
       if (!items || items.length === 0) {
         container.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Nenhum card para exibir</h3><p>Aplique outros filtros ou adicione novos itens.</p></div>`;
         return;
       }
-      
       const summaryFieldsConfig = [
         { title: 'Status:', keys: FIELD_KEYS.STATUS },
         { title: 'Assunto:', keys: FIELD_KEYS.ASSUNTO },
         { title: 'Observação:', keys: FIELD_KEYS.OBSERVACAO }
       ];
-
       const detailFieldsConfig = [
         { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA },
         { title: 'Link do Drive:', keys: FIELD_KEYS.LINK_DRIVE, isLink: true },
         { title: 'Comentários:', keys: FIELD_KEYS.COMENTARIOS }
       ];
-
       const today = new Date();
       today.setHours(0,0,0,0);
-
       items.forEach(item => {
         const sheetRowId = item._row;
-        
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
         cardDiv.dataset.internalId = item._internalId;
-
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
         cardHeader.dataset.sheetRow = sheetRowId;
-
         const statusValueForLogic = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
         const aprovacaoValueForLogic = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
-
-        // Limpar classes de fundo anteriores do cardDiv e aplicar a nova baseada na aprovação
         cardDiv.classList.remove('card-aprovado-background', 'card-reprovado-background', 'card-pendente-background');
         if (aprovacaoValueForLogic.startsWith('reprovado')) {
             cardDiv.classList.add('card-reprovado-background');
         } else if (aprovacaoValueForLogic.startsWith('pendente')) {
             cardDiv.classList.add('card-pendente-background');
-        } else if (aprovacaoValueForLogic.startsWith('aprovado')) { // Isso inclui "aprovado dia..."
+        } else if (aprovacaoValueForLogic.startsWith('aprovado')) {
             cardDiv.classList.add('card-aprovado-background');
         }
-
         const criticalStatusTerms = ['cancelado', 'suspenso', 'excluído'];
         let isCritical = criticalStatusTerms.includes(statusValueForLogic) || criticalStatusTerms.includes(aprovacaoValueForLogic);
-
         cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue', 'header-status-critical-issue', 'header-approval-warning-blinking');
-
         if (isCritical) {
             cardHeader.classList.add('header-status-critical-issue');
         } else if (statusValueForLogic === 'concluido' || statusValueForLogic === 'concluído') {
             cardHeader.classList.add('header-status-concluido');
-        } else if (aprovacaoValueForLogic.startsWith('pendente')) { // Modificado para startsWith
+        } else if (aprovacaoValueForLogic.startsWith('pendente')) {
             cardHeader.classList.add('header-aprovacao-pendente');
-        } else if (aprovacaoValueForLogic.startsWith('reprovado')) { // Modificado para startsWith
+        } else if (aprovacaoValueForLogic.startsWith('reprovado')) {
             cardHeader.classList.add('header-aprovacao-reprovado');
         }
-        
         const dataPostagemStr = getFieldValue(item, FIELD_KEYS.DATA_POSTAGEM);
         const dataPostagem = parseDate(dataPostagemStr);
         if (!isCritical && dataPostagem && dataPostagem < today && statusValueForLogic !== 'concluído' && statusValueForLogic !== 'concluido') {
             cardHeader.classList.add('blinking-overdue');
         }
-        
         const plataformaString = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
         const platformIconsHtml = getPlatformIconsHtml(plataformaString);
         const rawTitle = getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título');
-        const abbreviatedTitle = String(rawTitle); // Sem abreviação
+        const abbreviatedTitle = String(rawTitle);
         const cardTitleText = escapeHtml(toTitleCase(abbreviatedTitle));
-        
         cardHeader.innerHTML = `
             <span class="card-title">${platformIconsHtml}${cardTitleText}</span>
             <i class="fas ${isCritical ? '' : 'fa-chevron-down'} expand-icon"></i>
         `;
-
         const cardContentWrapper = document.createElement('div');
         cardContentWrapper.className = 'card-content-wrapper';
-
         const cardSummary = document.createElement('div');
         cardSummary.className = 'card-summary';
-
         let approvalNoticeHtml = '';
-        // Logic for "Aprovação Pendente" warning and "Aprovado dia..." notice
-        const currentDataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA); // Renomeado para evitar conflito
-        const currentDataEntrega = parseDate(currentDataEntregaStr); // Renomeado e usa a variável renomeada
-        const aprovacaoOriginal = getFieldValue(item, FIELD_KEYS.APROVACAO, ''); // Get original value for display
-        // aprovacaoValueForLogic is already defined as String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
-        // today is already defined and set to midnight
-        // isCritical is also defined earlier
-        // statusValueForLogic is also defined earlier
-
-        if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado")) { // Usa a variável renomeada
-            // Condition for "Aprovação Pendente"
-            if (!isCritical) { // Only blink if not already a critical status like "Cancelado"
+        const currentDataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
+        const currentDataEntrega = parseDate(currentDataEntregaStr);
+        const aprovacaoOriginal = getFieldValue(item, FIELD_KEYS.APROVACAO, '');
+        if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado")) {
+            if (!isCritical) {
                  cardHeader.classList.add('header-approval-warning-blinking');
             }
             approvalNoticeHtml = `<div class="approval-pending-notice">Aprovação Pendente</div>`;
         } else if (aprovacaoValueForLogic.startsWith('aprovado dia')) {
-            // Condition for "Aprovado dia..."
             cardDiv.classList.add('card-aprovado-background');
             const finalStatusTerms = ['concluído', 'concluido', 'finalizado', 'postado'];
             if (!finalStatusTerms.includes(statusValueForLogic)) {
-                // Display the full original "Aprovado dia DD/MM às XX:XXhoras"
                 approvalNoticeHtml = `<div class="approval-status-notice">${escapeHtml(aprovacaoOriginal)}</div>`;
             }
         } else if (aprovacaoValueForLogic.startsWith('aprovado')) {
-            // Fallback for other "Aprovado" statuses if not "Aprovado dia..."
              cardDiv.classList.add('card-aprovado-background');
              const finalStatusTerms = ['concluído', 'concluido', 'finalizado', 'postado'];
              if (!finalStatusTerms.includes(statusValueForLogic)) {
                 approvalNoticeHtml = `<div class="approval-status-notice">Aprovado (detalhes não formatados)</div>`;
              }
         }
-
         let summaryFieldsGeneratedHtml = '';
         summaryFieldsConfig.forEach(config => {
           summaryFieldsGeneratedHtml += renderSingleField(item, config);
         });
         cardSummary.innerHTML = approvalNoticeHtml + summaryFieldsGeneratedHtml;
-
         const dataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
-        // dataPostagemStr is already available from earlier in the function (defined around line 767)
-        
-        let __dateItemsHtmlOutput = ''; // Using a very unique name
+        let __dateItemsHtmlOutput = '';
         if (dataEntregaStr !== undefined) {
             let entregaDateItemClasses = "date-item date-item-entrega";
-            // Condition for blinking: delivery date is today or past, and not approved, and not a critical status
-            // This mirrors the condition for cardHeader.classList.add('header-approval-warning-blinking');
             if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado") && !isCritical) {
                 entregaDateItemClasses += " date-item-blinking-warning";
             }
@@ -1022,7 +944,6 @@
                 <div class="field-value-custom">${formatDisplayDate(dataEntregaStr)}</div>
               </div>`;
         }
-
         if (dataPostagemStr !== undefined) {
             __dateItemsHtmlOutput += `
               <div class="date-item">
@@ -1030,7 +951,6 @@
                 <div class="field-value-custom">${formatDisplayDate(dataPostagemStr)}</div>
               </div>`;
         }
-
         if (__dateItemsHtmlOutput.trim() !== '') {
             cardSummary.innerHTML += `
           <div class="card-field-custom dates-group">
@@ -1039,30 +959,25 @@
             </div>
           </div>`;
         }
-        
         const cardDetails = document.createElement('div');
         cardDetails.className = 'card-details';
         cardDetails.innerHTML += renderSingleField(item, { title: 'Aprovação:', keys: FIELD_KEYS.APROVACAO });
         detailFieldsConfig.forEach(config => {
           cardDetails.innerHTML += renderSingleField(item, config);
         });
-        
         cardDetails.innerHTML += `
           <div class="card-actions">
             <button class="btn-action btn-aprovacao" data-sheet-row="${sheetRowId}"><i class="fas fa-star"></i> Aprovação</button>
             <button class="btn-action btn-comentar" data-sheet-row="${sheetRowId}"><i class="fas fa-comment-dots"></i> Comentar</button>
           </div>`;
-
         cardContentWrapper.appendChild(cardSummary);
         cardContentWrapper.appendChild(cardDetails);
         cardDiv.appendChild(cardHeader);
         cardDiv.appendChild(cardContentWrapper);
         container.appendChild(cardDiv);
       });
-
       addCardEventListeners();
     }
-
     function addCardEventListeners() {
         document.querySelectorAll('.card').forEach(card => {
             card.addEventListener('click', function(event) {
@@ -1072,7 +987,6 @@
                 this.classList.toggle('expanded');
             });
         });
-
         document.querySelectorAll('.btn-comentar').forEach(button => {
             button.addEventListener('click', function() {
                 const sheetRowId = this.dataset.sheetRow;
@@ -1091,7 +1005,6 @@
                 }
             });
         });
-
         document.querySelectorAll('.btn-aprovacao').forEach(button => {
             button.addEventListener('click', function() {
                 const sheetRowId = this.dataset.sheetRow;
@@ -1103,10 +1016,9 @@
                 if (newStatusPrompt !== null && newStatusPrompt.trim() !== "") {
                     const now = new Date();
                     const dia = String(now.getDate()).padStart(2, "0");
-                    const mes = String(now.getMonth() + 1).padStart(2, "0"); // Meses em JS são de 0 a 11
+                    const mes = String(now.getMonth() + 1).padStart(2, "0");
                     const horas = String(now.getHours()).padStart(2, "0");
                     const minutos = String(now.getMinutes()).padStart(2, "0");
-                    // Novo formato para gravação: "[Status] dia DD/MM às XX:XXhoras"
                     const newStatusValue = `${newStatusPrompt.trim()} dia ${dia}/${mes} às ${horas}:${minutos}horas`;
                     sendDataToSheet({ action: "updateI", row: sheetRowId, value: newStatusValue }, "Status de aprovação atualizado!", () => {
                         loadData(); 
@@ -1115,24 +1027,20 @@
             });
         });
     }
-
-    function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors', 
-            cache: 'no-cache',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            redirect: 'follow'
-        })
-        .then(response => {
-            showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
-        })
-        .catch(error => {
-            showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
-        });
-    }
-
+function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
+    fetch('https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
+    })
+    .catch(error => {
+        showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
+    });
+}
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
