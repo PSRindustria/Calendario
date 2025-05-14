@@ -1028,28 +1028,27 @@
         });
     }
 function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
-  console.log('🔀 Enviando para planilha:', payload);
-  fetch('https://script.google.com/macros/s/AKfy…/exec', {
-    method: 'POST',
-    mode: 'cors',                    // garantir CORS
-    cache: 'no-cache',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} – ${response.statusText}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('✅ Resposta da planilha:', data);
-    showSuccessModal("Obrigado!", successMessageBase, 2000, callback);
-  })
-  .catch(error => {
-    console.error('❌ Erro ao enviar para a planilha:', error);
-    showSuccessModal("Erro", "Falha ao enviar dados para a planilha.", 3000);
-  });
+    // Monta a URL da sua Web App do Apps Script
+    const webAppBase = 'https://script.google.com/macros/s/AKfycby8yXZAoOsfkc6Mlt0jcs3lK2V0l-zM6nWo00otZhIajM_Odi24VFsBmdZJDKMaI_9hcw/exec';
+    const params = new URLSearchParams();
+    params.set('action', payload.action);
+    params.set('row', payload.row);
+    if (payload.action === 'addComment') params.set('comment', payload.comment);
+    if (payload.action === 'updateI') params.set('value', payload.value);
+
+    // JSONP callback handler único por chamada
+    const cbName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 8);
+    window[cbName] = function(resp) {
+        showSuccessModal("Obrigado!", `${successMessageBase}`, 2000, callback);
+        delete window[cbName];
+        script.remove();
+    };
+    params.set('callback', cbName);
+
+    // Cria o script dinamicamente (JSONP)
+    const script = document.createElement('script');
+    script.src = `${webAppBase}?${params.toString()}`;
+    document.body.appendChild(script);
 }
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
