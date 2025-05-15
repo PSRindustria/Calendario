@@ -824,7 +824,11 @@
         return `
           <div class="card-field-custom">
             <div class="field-label-custom">${escapeHtml(config.title)}</div>
-            <div class="field-value-custom">${displayValue || (config.title === 'Comentários:' ? '<span style="color: var(--dark-gray); font-style: italic;">(Sem comentários)</span>' : 'N/A')}</div>
+            <div class="field-value-custom">${
+  displayValue !== undefined && displayValue !== null && displayValue !== ''
+    ? displayValue
+    : (config.title === 'Comentários:' ? '<span style="color: var(--dark-gray); font-style: italic;">(Sem comentários)</span>' : '')
+}
           </div>`;
     }
     function renderCards(items) {
