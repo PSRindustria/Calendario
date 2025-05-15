@@ -742,7 +742,7 @@
           return item[key];
         }
       }
-      return defaultValue;
+      return '';
     }
     function getPlatformIconsHtml(platformString) {
         if (!platformString) return '';
@@ -819,7 +819,7 @@
                 displayValue = statusText;
             }
         } else {
-            displayValue = escapeHtml(String(fieldValue));
+            displayValue = fieldValue === undefined || fieldValue === null ? '' : escapeHtml(String(fieldValue));
         }
         return `
           <div class="card-field-custom">
