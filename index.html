@@ -807,7 +807,7 @@
         } else if (config.keys.includes(FIELD_KEYS.STATUS[0])) {
             const statusText = escapeHtml(String(fieldValue));
             const statusLower = String(fieldValue).toLowerCase();
-            const blueStatusTerms = ["programado", "postagem programada", "comunicado engatilhado", "comunicado programado", "entregue", "agendado"];
+            const blueStatusTerms = ["programado", "postagem programada", "comunicado engatilhado", "comunicado programado", "entregue", "concluído", "agendado"];
             if (blueStatusTerms.includes(statusLower)) {
                 displayValue = `<span class="status-highlight-blue">${statusText}</span>`;
             } else if (statusLower === "em andamento" || statusLower === "na fila") {
