@@ -144,6 +144,19 @@
     .filters-container .btn-filter-action:hover {
         opacity: 0.8;
     }
+    .btn-concluidos-mes {
+      background-color: #7aa9e9;
+      color: #fff;
+      border: 1.5px solid #3989c1;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(57,137,193,0.08);
+      transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
+    }
+    .btn-concluidos-mes:hover, .btn-concluidos-mes:focus {
+      background-color: #3989c1;
+      color: #fff;
+      border-color: #7aa9e9;
+    }
     .card-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
@@ -395,6 +408,16 @@
       border-radius: 4px;
       border: 1px solid var(--primary-color);
     }
+.btn-concluidos-mes {
+  background-color: #28a745 !important; /* verde sucesso */
+  color: #fff !important;
+  border-color: #28a745 !important;
+}
+.btn-concluidos-mes:hover {
+  background-color: #218838 !important; /* verde escuro no hover */
+  border-color: #218838 !important;
+  opacity: 0.85;
+}
   </style>
 </head>
 <body>
@@ -426,6 +449,7 @@
         platform: null
     };
     let successModalTimeout;
+    let showConcluidosAprovados = false;
 
     function loadData() {
       document.getElementById('status-messages').textContent = 'Carregando dados...';
@@ -437,12 +461,9 @@
             return;
           }
           let items = Object.values(json);
-          // Certifique-se de que _row (ID da linha da planilha) está presente nos dados do Firebase.
-          // O script do Apps Script já deve adicionar _row ao sincronizar com o Firebase.
           allData = items.map(item => ({
              ...item,
              _internalId: item._internalId || Math.random().toString(36).substr(2, 9)
-             // _row deve vir do Firebase. Se não vier, as ações nos cards podem falhar ao identificar a linha.
           }));
           populateFilters();
           const currentMonth = new Date().getMonth();
@@ -474,30 +495,14 @@
         DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
     };
 
-    function showSuccessModal(title, message, duration = 1250, callback) { // Duração padrão alterada para 1000ms
+    function showSuccessModal(title, message, duration = 1250, callback) {
         const overlay = document.getElementById('successModalOverlay');
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
-        // const countdownSpan = document.getElementById('modalCountdown'); // Linha do contador removida
-        
         overlay.classList.add('visible');
-        
-        // let secondsLeft = Math.floor(duration / 500); // Lógica do contador removida
-        // countdownSpan.textContent = secondsLeft; // Linha do contador removida
-
         clearTimeout(successModalTimeout);
-
-        // const interval = setInterval(() => { // Lógica do contador removida
-        //     secondsLeft--; // Linha do contador removida
-        //     countdownSpan.textContent = secondsLeft; // Linha do contador removida
-        //     if (secondsLeft <= 0) { // Linha do contador removida
-        //         clearInterval(interval); // Linha do contador removida
-        //     }
-        // }, 500);
-
         successModalTimeout = setTimeout(() => {
             overlay.classList.remove('visible');
-            // clearInterval(interval); // Linha do contador removida
             if (callback) callback();
         }, duration);
     }
@@ -551,6 +556,10 @@
         });
         return Object.values(dateMap).sort((a, b) => a.sortKey - b.sortKey);
     }
+
+    // --------------------------
+    // AJUSTE DE FILTROS E BOTÃO
+    // --------------------------
     function populateFilters() {
         const filtersContainer = document.getElementById('filtersContainer');
         filtersContainer.innerHTML = ''; 
@@ -618,11 +627,52 @@
             });
             filtersContainer.appendChild(platformSelect);
         }
+
+        // ---- NOVO BOTÃO ----
+        const btnMostrarConcluidos = document.createElement("button");
+        btnMostrarConcluidos.textContent = showConcluidosAprovados ? "Ocultar Concluídos" : "Mostrar Concluídos";
+        btnMostrarConcluidos.className = "btn-filter-action btn-concluidos-mes";
+        btnMostrarConcluidos.innerHTML = `<i class="fas fa-check-double"></i> ${btnMostrarConcluidos.textContent}`;
+        btnMostrarConcluidos.addEventListener("click", () => {
+    // Salva os filtros ativos antes de atualizar
+    const filtroAtualMes = activeFilters.month;
+    const filtroAtualStatus = activeFilters.status;
+    const filtroAtualAprovacao = activeFilters.aprovacao;
+    const filtroAtualPlatform = activeFilters.platform;
+
+    showConcluidosAprovados = !showConcluidosAprovados;
+    populateFilters();
+
+    // Restaura os filtros após recriar os selects
+    if (filtroAtualMes && document.getElementById('monthFilter')) {
+        document.getElementById('monthFilter').value = filtroAtualMes;
+        activeFilters.month = filtroAtualMes;
+    }
+    if (filtroAtualStatus && document.getElementById('statusFilter')) {
+        document.getElementById('statusFilter').value = filtroAtualStatus;
+        activeFilters.status = filtroAtualStatus;
+    }
+    if (filtroAtualAprovacao && document.getElementById('aprovacaoFilter')) {
+        document.getElementById('aprovacaoFilter').value = filtroAtualAprovacao;
+        activeFilters.aprovacao = filtroAtualAprovacao;
+    }
+    if (filtroAtualPlatform && document.getElementById('platformFilter')) {
+        document.getElementById('platformFilter').value = filtroAtualPlatform;
+        activeFilters.platform = filtroAtualPlatform;
+    }
+
+    applyFiltersAndRender();
+});
+        filtersContainer.appendChild(btnMostrarConcluidos);
+
+        // ---- FIM DO BOTÃO ----
+
         const resultadosBtn = document.createElement("a");
         resultadosBtn.href = "#"; // Defina o link correto se necessário
         resultadosBtn.textContent = "Resultados";
-        resultadosBtn.className = "btn-filter-action";
+        resultadosBtn.className = "btn-filter-action btn-comunicado";
         filtersContainer.appendChild(resultadosBtn);
+
         const limparFiltrosBtn = document.createElement("button");
         limparFiltrosBtn.textContent = "Limpar Filtros";
         limparFiltrosBtn.className = "btn-filter-action clear-filter-btn";
@@ -639,37 +689,61 @@
         });
         filtersContainer.appendChild(limparFiltrosBtn);
     }
-    function applyFiltersAndRender() {
-        let filteredData = [...allData];
-        if (activeFilters.month) {
-            const [year, month] = activeFilters.month.split('-').map(Number);
-            filteredData = filteredData.filter(item => {
-                const itemDateStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
-                if (!itemDateStr) return false;
-                let itemDate = parseDate(itemDateStr);
-                return itemDate && itemDate.getMonth() === month && itemDate.getFullYear() === year;
-            });
-        }
-        if (activeFilters.status) {
-            filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.STATUS) === activeFilters.status);
-        }
-        if (activeFilters.aprovacao) {
-            const filterValue = activeFilters.aprovacao.toLowerCase();
-            filteredData = filteredData.filter(item => {
-                const itemAprovacao = getFieldValue(item, FIELD_KEYS.APROVACAO, "").toLowerCase();
-                return itemAprovacao.startsWith(filterValue);
-            });
-        }
-        if (activeFilters.platform) {
-            filteredData = filteredData.filter(item => {
-                const itemPlatforms = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
-                if (!itemPlatforms) return false;
-                return String(itemPlatforms).split(',').map(p => p.trim()).includes(activeFilters.platform);
-            });
-        }
-        renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
-        updateStatusMessage();
+
+function applyFiltersAndRender() {
+    let filteredData = [...allData];
+
+    // Filtros normais
+    if (activeFilters.month) {
+        const [year, month] = activeFilters.month.split('-').map(Number);
+        filteredData = filteredData.filter(item => {
+            const itemDateStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
+            if (!itemDateStr) return false;
+            let itemDate = parseDate(itemDateStr);
+            return itemDate && itemDate.getMonth() === month && itemDate.getFullYear() === year;
+        });
     }
+    if (activeFilters.status) {
+        filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.STATUS) === activeFilters.status);
+    }
+    if (activeFilters.aprovacao) {
+        const filterValue = activeFilters.aprovacao.toLowerCase();
+        filteredData = filteredData.filter(item => {
+            const itemAprovacao = getFieldValue(item, FIELD_KEYS.APROVACAO, "").toLowerCase();
+            return itemAprovacao.startsWith(filterValue);
+        });
+    }
+    if (activeFilters.platform) {
+        filteredData = filteredData.filter(item => {
+            const itemPlatforms = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
+            if (!itemPlatforms) return false;
+            return String(itemPlatforms).split(',').map(p => p.trim()).includes(activeFilters.platform);
+        });
+    }
+
+    // *** LÓGICA FINAL: mostra ou oculta concluídos/aprovados ***
+// *** LÓGICA FINAL: mostra ou oculta concluídos/aprovados ***
+if (showConcluidosAprovados) {
+    // Mostrar apenas concluídos/aprovados
+    filteredData = filteredData.filter(item => {
+        const status = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        const aprovacao = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        return (status === 'concluido' && aprovacao.startsWith('aprovado'));
+    });
+} else {
+    // Ocultar concluídos/aprovados
+    filteredData = filteredData.filter(item => {
+        const status = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        const aprovacao = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+        return !(status === 'concluido' && aprovacao.startsWith('aprovado'));
+    });
+}
+
+renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
+updateStatusMessage();
+}
+    // --------------------------
+
     function getMonthName(monthIndex) {
       const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       return months[monthIndex];
@@ -852,13 +926,12 @@
       const today = new Date();
       today.setHours(0,0,0,0);
       items.forEach(item => {
-        const itemRowId = item._row; // Este é o ID da linha da planilha, que deve vir do Firebase
+        const itemRowId = item._row;
         const cardDiv = document.createElement('div');
         cardDiv.className = 'card';
         cardDiv.dataset.internalId = item._internalId;
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
-        // cardHeader.dataset.sheetRow = itemRowId; // Movido para os botões para garantir que está lá quando clicado
         const statusValueForLogic = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
         const aprovacaoValueForLogic = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
         cardDiv.classList.remove('card-aprovado-background', 'card-reprovado-background', 'card-pendente-background');
@@ -960,7 +1033,6 @@
         detailFieldsConfig.forEach(config => {
           cardDetails.innerHTML += renderSingleField(item, config);
         });
-        // Adiciona o data-sheet-row diretamente nos botões
         cardDetails.innerHTML += `
           <div class="card-actions">
             <button class="btn-action btn-aprovacao" data-sheet-row="${itemRowId}"><i class="fas fa-star"></i> Aprovação</button>
@@ -990,7 +1062,7 @@
 
                 if (sheetRowIdFromDataset && sheetRowIdFromDataset !== "undefined" && sheetRowIdFromDataset.trim() !== "") {
                     sheetRowId = parseInt(sheetRowIdFromDataset, 10);
-                    if (isNaN(sheetRowId) || sheetRowId <= 1) { // Linhas da planilha geralmente começam em 2 (1 para cabeçalho)
+                    if (isNaN(sheetRowId) || sheetRowId <= 1) {
                         showSuccessModal('Erro', 'ID da linha inválido: ' + sheetRowIdFromDataset, 3000);
                         console.error("ID da linha inválido após parseInt para comentário:", sheetRowIdFromDataset);
                         return;
@@ -1019,7 +1091,7 @@
 
                 if (sheetRowIdFromDataset && sheetRowIdFromDataset !== "undefined" && sheetRowIdFromDataset.trim() !== "") {
                     sheetRowId = parseInt(sheetRowIdFromDataset, 10);
-                    if (isNaN(sheetRowId) || sheetRowId <= 1) { // Linhas da planilha geralmente começam em 2
+                    if (isNaN(sheetRowId) || sheetRowId <= 1) {
                         showSuccessModal('Erro', 'ID da linha inválido: ' + sheetRowIdFromDataset, 3000);
                         console.error("ID da linha inválido após parseInt para aprovação:", sheetRowIdFromDataset);
                         return;
@@ -1049,7 +1121,7 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
     const webAppBase = 'https://script.google.com/macros/s/AKfycbzO7oR3CNBZD-NCnij7Xa-xScc09EWGU69uq81VDHPZmlmwjYJ4s_4rIYzy2Gp1iXvV/exec';
     const params = new URLSearchParams();
     params.set('action', payload.action);
-    params.set('row', payload.row); // Agora 'row' é um número
+    params.set('row', payload.row);
     if (payload.action === 'addComment') params.set('comment', payload.comment);
     if (payload.action === 'updateI') params.set('value', payload.value);
 
@@ -1066,7 +1138,7 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
             console.error("Erro retornado pelo Apps Script:", resp);
         }
         delete window[cbName];
-        if (script && script.parentNode) script.remove(); // Garante que o script exista e tenha um pai antes de remover
+        if (script && script.parentNode) script.remove();
     };
     params.set('callback', cbName);
 
@@ -1075,7 +1147,7 @@ function sendDataToSheet(payload, successMessageBase = "Ação enviada para a pl
     script.onerror = function() {
         console.error('Erro ao conectar com o servidor Google Apps Script! URL:', script.src);
         showSuccessModal('Erro de Conexão', 'Não foi possível conectar ao servidor do Google Apps Script.', 4000);
-        if (window[cbName]) delete window[cbName]; // Limpa o callback global em caso de erro de carregamento do script
+        if (window[cbName]) delete window[cbName];
         if (script && script.parentNode) script.remove();
     };
     document.body.appendChild(script);
