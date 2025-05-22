@@ -418,6 +418,16 @@
   border-color: #218838 !important;
   opacity: 0.85;
 }
+  .btn-concluidos-mes.btn-ocultando {
+  background-color: #d96a6a !important;
+  color: #333 !important;
+  border-color: #d96a6a !important;
+}
+  .btn-concluidos-mes.btn-ocultando:hover {
+  background-color: #cd6060 !important;
+  border-color: #cd6060 !important;
+  color: #fff !important;
+}
   </style>
 </head>
 <body>
@@ -631,8 +641,8 @@
         // ---- NOVO BOTÃO ----
         const btnMostrarConcluidos = document.createElement("button");
         btnMostrarConcluidos.textContent = showConcluidosAprovados ? "Ocultar Concluídos" : "Mostrar Concluídos";
-        btnMostrarConcluidos.className = "btn-filter-action btn-concluidos-mes";
-        btnMostrarConcluidos.innerHTML = `<i class="fas fa-check-double"></i> ${btnMostrarConcluidos.textContent}`;
+        btnMostrarConcluidos.className = "btn-filter-action btn-concluidos-mes" + (showConcluidosAprovados ? " btn-ocultando" : "");
+        btnMostrarConcluidos.textContent = btnMostrarConcluidos.textContent;
         btnMostrarConcluidos.addEventListener("click", () => {
     // Salva os filtros ativos antes de atualizar
     const filtroAtualMes = activeFilters.month;
