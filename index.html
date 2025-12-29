@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel PSR - Live Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -18,7 +17,6 @@
                     colors: {
                         primary: '#003366',
                         secondary: '#4682B4',
-                        // Mantemos as cores personalizadas para uso direto nas classes
                         'custom-green': '#28a745',
                         'custom-yellow': '#ffc107',
                         'custom-red': '#d0021b',
@@ -35,19 +33,13 @@
     <style type="text/tailwindcss">
         @layer components {
             .text-display { @apply text-4xl font-bold tracking-tight; font-family: 'Poppins', sans-serif; }
-            .text-heading { @apply text-xl font-semibold tracking-tight; font-family: 'Poppins', sans-serif; }
-            .text-body { @apply font-sans text-sm font-normal leading-relaxed; }
-            .text-label { @apply font-sans text-xs font-medium uppercase tracking-wider; }
-            
-            /* CORREÇÃO CSS: Usando cores padrão do Tailwind no @apply para evitar erros do compilador JIT */
             .card-elevated { 
                 @apply rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm transition-all duration-200; 
             }
             .card-elevated:hover { 
                 @apply shadow-md transform -translate-y-1; 
             }
-            
-            .status-pill { @apply px-2 py-1 rounded-md text-xs font-bold inline-flex items-center gap-1; }
+            .status-pill { @apply px-2 py-1 rounded-md text-xs font-bold inline-flex items-center gap-2; }
             .btn-action { @apply flex-1 py-2 rounded-md font-medium transition-colors text-sm flex items-center justify-center gap-2; }
         }
 
@@ -129,41 +121,38 @@
             return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
         };
 
-        // --- CORREÇÃO DO COMPONENTE DE ÍCONE ---
-        const Icon = ({ name, size = 18, className = "", style = {} }) => {
-            const iconRef = React.useRef(null);
-            
-            // Função para converter CamelCase para kebab-case (ex: LayoutDashboard -> layout-dashboard)
-            const toKebabCase = (str) => {
-                return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+        // --- COMPONENTE DE ÍCONE ESTÁVEL (FONTAWESOME) ---
+        // Mapeia os nomes que usávamos no Lucide para classes do FontAwesome
+        const Icon = ({ name, size = 18, className = "" }) => {
+            const iconMap = {
+                'LayoutDashboard': 'fa-chart-line',
+                'RefreshCw': 'fa-sync-alt',
+                'Filter': 'fa-filter',
+                'Eye': 'fa-eye',
+                'EyeOff': 'fa-eye-slash',
+                'Inbox': 'fa-inbox',
+                'Calendar': 'fa-calendar-alt',
+                'FileCheck': 'fa-file-signature',
+                'ArrowRight': 'fa-arrow-right',
+                'X': 'fa-times',
+                'Link': 'fa-link',
+                'MessageSquare': 'fa-comments',
+                'ThumbsUp': 'fa-thumbs-up',
+                'ThumbsDown': 'fa-thumbs-down',
+                'MessageCircle': 'fa-comment-dots',
+                'Edit': 'fa-pen-to-square',
+                'Check': 'fa-check',
+                'CheckCircle2': 'fa-circle-check',
+                'XCircle': 'fa-circle-xmark',
+                'AlertTriangle': 'fa-triangle-exclamation',
+                'Clock': 'fa-clock',
+                'HelpCircle': 'fa-circle-question',
+                'Loader': 'fa-spinner fa-spin'
             };
 
-            useEffect(() => {
-                if (iconRef.current && window.lucide) {
-                    const kebabName = toKebabCase(name);
-                    lucide.createIcons({
-                        attrs: { 
-                            size, 
-                            class: className, 
-                            style: Object.entries(style).map(([k,v]) => `${k}:${v}`).join(';') 
-                        },
-                        nameAttr: 'data-lucide',
-                        // Força a renderização apenas neste elemento
-                        icons: { [kebabName]: lucide.icons[name] } 
-                    });
-                    
-                    // Fallback genérico caso o mapeamento acima falhe
-                    if (!iconRef.current.innerHTML) {
-                        lucide.createIcons({
-                            attrs: { size, class: className },
-                            nameAttr: 'data-lucide'
-                        });
-                    }
-                }
-            }, [name, size, className, style]);
+            const faClass = iconMap[name] || 'fa-circle'; // fallback
 
-            // Renderiza com o nome em kebab-case para o Lucide encontrar
-            return <i data-lucide={toKebabCase(name)} ref={iconRef}></i>;
+            return <i className={`fas ${faClass} ${className}`} style={{ fontSize: size }}></i>;
         };
 
         // --- APP PRINCIPAL ---
@@ -177,7 +166,7 @@
             const [filterMonth, setFilterMonth] = useState('');
             const [filterStatus, setFilterStatus] = useState('all');
             const [filterPlatform, setFilterPlatform] = useState('all');
-            const [showCompleted, setShowCompleted] = useState(false); // Padrão: Ocultar concluídos
+            const [showCompleted, setShowCompleted] = useState(false); 
 
             // --- DATA FETCHING ---
             const loadData = useCallback(() => {
@@ -393,7 +382,7 @@
                             <div className="flex items-center gap-3">
                                 {loading && <div className="loader w-6 h-6 border-2"></div>}
                                 <button onClick={loadData} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition" title="Recarregar">
-                                    <Icon name="RefreshCw" size={20} className={loading ? "animate-spin" : ""} />
+                                    <Icon name="RefreshCw" size={20} className={loading ? "fa-spin" : ""} />
                                 </button>
                             </div>
                         </div>
