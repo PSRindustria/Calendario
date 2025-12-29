@@ -549,341 +549,24 @@
                                     </p>
                                 </div>
 
-                                <button 
-                                    onClick={() => setShowCompleted(!showCompleted)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
-                                        showCompleted 
-                                            ? 'bg-primary text-white shadow-sm' 
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                                >
-                                    <Icon name={showCompleted ? "Eye" : "EyeOff"} size={16} />
-                                    {showCompleted ? "Ocultar Concluídas" : "Mostrar Concluídas"}
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* GRID DE TAREFAS */}
-                    <main className="container mx-auto px-4 py-8">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center py-20">
-                                <div className="loader mb-4"></div>
-                                <p className="text-gray-600 font-medium">Carregando tarefas...</p>
-                                <p className="text-sm text-gray-400 mt-2">Conectando ao Firebase</p>
-                            </div>
-                        ) : filteredTasks.length === 0 ? (
-                            <div className="text-center py-20 bg-white rounded-xl border-2 border-dashed border-gray-300">
-                                <Icon name="Inbox" size={64} className="mx-auto text-gray-300 mb-4" />
-                                <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhuma tarefa encontrada</h3>
-                                <p className="text-gray-500 mb-4">
-                                    {searchTerm ? 'Tente ajustar sua busca ou' : 'Tente ajustar os'} filtros acima
-                                </p>
-                                {(searchTerm || filterMonth || filterStatus !== 'all' || filterPlatform !== 'all') && (
-                                    <button 
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            setFilterMonth('');
-                                            setFilterStatus('all');
-                                            setFilterPlatform('all');
-                                        }}
-                                        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-                                    >
-                                        Limpar Filtros
-                                    </button>
-                                )}
-                            </div>
-                        ) : (
-                            <>
-                                <div className="mb-4 text-sm text-gray-600">
-                                    Exibindo <span className="font-bold text-primary">{filteredTasks.length}</span> tarefa(s)
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredTasks.map((task, index) => {
-                                        const status = getFieldValue(task, FIELD_KEYS.STATUS, 'Sem Status');
-                                        const approval = getFieldValue(task, FIELD_KEYS.APROVACAO, 'Pendente');
-                                        const title = getFieldValue(task, FIELD_KEYS.TITLE, 'Sem Título');
-                                        const platform = getFieldValue(task, FIELD_KEYS.PLATAFORMA, 'Geral');
-                                        const dueDate = getFieldValue(task, FIELD_KEYS.DATA_ENTREGA);
-                                        const isOverdue = isDateOverdue(dueDate) && !status.toLowerCase().includes('conclu');
-                                        
-                                        const style = getStatusStyle(status, approval);
-                                        
-                                        return (
-                                            <div 
-                                                key={task._internalId}
-                                                onClick={() => setSelectedTask(task)}
-                                                className="card-hover bg-white rounded-xl border-2 border-gray-200 p-5 cursor-pointer group relative overflow-hidden"
-                                                style={{ animationDelay: `${index * 30}ms` }}
-                                            >
-                                                {isOverdue && (
-                                                    <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1 badge-pulse">
-                                                        <Icon name="AlertTriangle" size={12} />
-                                                        ATRASADA
-                                                    </div>
-                                                )}
-                                                
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                                        {platform}
-                                                    </span>
-                                                    <div className={`${style.bg} ${style.text} px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 border ${style.border}`}>
-                                                        <Icon name={style.icon} size={12} />
-                                                        {status}
-                                                    </div>
-                                                </div>
-
-                                                <h3 className="text-lg font-bold text-gray-900 mb-3 leading-tight line-clamp-2 min-h-[56px]">
-                                                    {title}
-                                                </h3>
-
-                                                <div className="space-y-2 text-sm">
-                                                    <div className="flex items-center gap-2 text-gray-600">
-                                                        <Icon name="Calendar" size={14} className="text-gray-400" />
-                                                        <span className={isOverdue ? "font-bold text-red-600" : "font-medium"}>
-                                                            {formatDate(dueDate)}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center gap-2">
-                                                        <Icon name="FileCheck" size={14} className="text-gray-400" />
-                                                        <span className={`text-xs font-semibold ${
-                                                            approval.toLowerCase().includes('reprovado') 
-                                                                ? 'text-red-600' 
-                                                                : approval.toLowerCase().includes('aprovado')
-                                                                ? 'text-green-600'
-                                                                : 'text-gray-600'
-                                                        }`}>
-                                                            {approval}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span>Clique para detalhes</span>
-                                                    <Icon name="ArrowRight" size={16} />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </main>
-
-                    {/* MODAL DE DETALHES */}
-                    {selectedTask && (
-                        <div 
-                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 modal-backdrop" 
-                            onClick={() => setSelectedTask(null)}
-                        >
-                            <div 
-                                className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-fadeInUp" 
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <div className="p-6 bg-gradient-to-r from-primary to-secondary text-white flex justify-between items-start sticky top-0 z-10">
-                                    <div className="flex-1">
-                                        <div className="flex flex-wrap gap-2 mb-3">
-                                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-                                                {getFieldValue(selectedTask, FIELD_KEYS.PLATAFORMA)}
-                                            </span>
-                                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold">
-                                                ID: {selectedTask._row || 'N/A'}
-                                            </span>
-                                        </div>
-                                        <h2 className="text-2xl font-bold leading-tight">
-                                            {getFieldValue(selectedTask, FIELD_KEYS.TITLE)}
-                                        </h2>
-                                    </div>
-                                    <button 
-                                        onClick={() => setSelectedTask(null)} 
-                                        className="text-white/80 hover:text-white transition p-2 hover:bg-white/10 rounded-lg ml-4"
-                                    >
-                                        <Icon name="X" size={24} />
-                                    </button>
-                                </div>
-
-                                <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div className="p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                                            <div className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-semibold">Status da Tarefa</div>
-                                            <div className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                                                <Icon name={getStatusStyle(getFieldValue(selectedTask, FIELD_KEYS.STATUS), '').icon} size={20} />
-                                                {getFieldValue(selectedTask, FIELD_KEYS.STATUS)}
-                                            </div>
-                                        </div>
-                                        <div className={`p-4 rounded-xl border-2 ${
-                                            String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado')
-                                                ? 'bg-red-50 border-red-200'
-                                                : String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('aprovado')
-                                                ? 'bg-green-50 border-green-200'
-                                                : 'bg-yellow-50 border-yellow-200'
-                                        }`}>
-                                            <div className="text-xs uppercase tracking-wide mb-2 font-semibold opacity-80">Status de Aprovação</div>
-                                            <div className={`font-bold text-lg flex items-center gap-2 ${
-                                                String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado')
-                                                    ? 'text-red-700'
-                                                    : String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('aprovado')
-                                                    ? 'text-green-700'
-                                                    : 'text-yellow-700'
-                                            }`}>
-                                                <Icon name={
-                                                    String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado')
-                                                        ? 'XCircle'
-                                                        : String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('aprovado')
-                                                        ? 'CheckCircle2'
-                                                        : 'Clock'
-                                                } size={20} />
-                                                {getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                                <Icon name="MessageSquare" size={16} />
-                                                Assunto
-                                            </h4>
-                                            <p className="text-gray-700">{getFieldValue(selectedTask, FIELD_KEYS.ASSUNTO) || 'Não especificado'}</p>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                                <Icon name="Calendar" size={16} />
-                                                Data de Entrega
-                                            </h4>
-                                            <p className={`text-gray-700 font-semibold ${
-                                                isDateOverdue(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA)) 
-                                                    ? 'text-red-600' 
-                                                    : ''
-                                            }`}>
-                                                {formatDate(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA))}
-                                                {isDateOverdue(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA)) && 
-                                                    <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">ATRASADA</span>
-                                                }
-                                            </p>
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                                <Icon name="Link" size={16} />
-                                                Link do Drive
-                                            </h4>
-                                            {getFieldValue(selectedTask, FIELD_KEYS.LINK_DRIVE) ? (
-                                                <a 
-                                                    href={getFieldValue(selectedTask, FIELD_KEYS.LINK_DRIVE)} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline font-medium transition"
-                                                >
-                                                    <Icon name="ExternalLink" size={16} />
-                                                    Abrir arquivo no Drive
-                                                </a>
-                                            ) : (
-                                                <span className="text-gray-400 italic">Nenhum link fornecido</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="mb-6">
-                                        <h4 className="font-bold text-gray-900 mb-3 pb-2 border-b-2 border-gray-200">
-                                            📝 Observação / Descrição
-                                        </h4>
-                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                {getFieldValue(selectedTask, FIELD_KEYS.OBSERVACAO) || 'Sem observações registradas.'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 mb-3 pb-2 border-b-2 border-gray-200 flex items-center gap-2">
-                                            <Icon name="MessageCircle" size={18} />
-                                            Comentários e Histórico
-                                        </h4>
-                                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                                            {String(getFieldValue(selectedTask, FIELD_KEYS.COMENTARIOS, '')).split('\n').filter(c => c.trim()).map((comment, i) => (
-                                                <div key={i} className="bg-amber-50 p-3 rounded-lg border-l-4 border-amber-400 shadow-sm">
-                                                    <p className="text-sm text-gray-800">{comment}</p>
-                                                </div>
-                                            ))}
-                                            {!getFieldValue(selectedTask, FIELD_KEYS.COMENTARIOS) && (
-                                                <div className="text-center py-8 text-gray-400 italic">
-                                                    <Icon name="MessageCircle" size={32} className="mx-auto mb-2 opacity-30" />
-                                                    Nenhum comentário registrado
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 border-t-2 border-gray-200 bg-gray-50">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <button 
-                                            onClick={() => handleApprove(selectedTask, 'approve')}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium shadow-sm"
-                                        >
-                                            <Icon name="ThumbsUp" size={18} />
-                                            <span className="hidden sm:inline">Aprovar</span>
-                                        </button>
-                                        <button 
-                                            onClick={() => handleApprove(selectedTask, 'reject')}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium shadow-sm"
-                                        >
-                                            <Icon name="ThumbsDown" size={18} />
-                                            <span className="hidden sm:inline">Reprovar</span>
-                                        </button>
-                                        <button 
-                                            onClick={() => handleComment(selectedTask)}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium shadow-sm"
-                                        >
-                                            <Icon name="MessageCircle" size={18} />
-                                            <span className="hidden sm:inline">Comentar</span>
-                                        </button>
-                                        <button 
-                                            onClick={() => handleApprove(selectedTask, 'custom')}
-                                            className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium shadow-sm"
-                                        >
-                                            <Icon name="Edit" size={18} />
-                                            <span className="hidden sm:inline">Customizar</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TOAST DE FEEDBACK */}
-                    {modalMessage && (
-                        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[100] animate-slideIn">
-                            <div className={`px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 font-medium text-white min-w-[300px] ${
-                                modalMessage.type === 'loading' ? 'bg-blue-600' : 
-                                modalMessage.type === 'error' ? 'bg-red-600' : 'bg-green-600'
-                            }`}>
-                                {modalMessage.type === 'loading' && (
-                                    <div className="w-5 h-5 border-3 border-white/40 border-t-white rounded-full animate-spin"></div>
-                                )}
-                                {modalMessage.type === 'success' && <Icon name="CheckCircle2" size={22} />}
-                                {modalMessage.type === 'error' && <Icon name="AlertTriangle" size={22} />}
-                                <span className="flex-1">{modalMessage.text}</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
                                 <div className="flex items-center gap-3">
-                                    {loading && <div className="loader"></div>}
+                                    <button 
+                                        onClick={() => setShowCompleted(!showCompleted)}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+                                            showCompleted 
+                                                ? 'bg-primary text-white shadow-sm' 
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                    >
+                                        <Icon name={showCompleted ? "Eye" : "EyeOff"} size={16} />
+                                        {showCompleted ? "Ocultar Concluídas" : "Mostrar Concluídas"}
+                                    </button>
+
+                                    {loading && <div className="loader w-5 h-5 border-2"></div>}
                                     <button 
                                         onClick={loadData} 
                                         disabled={loading}
-                                        className="p-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                                        className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm border border-gray-200"
                                         title="Recarregar dados"
                                     >
                                         <Icon name="RefreshCw" size={20} className={loading ? "fa-spin" : ""} />
@@ -979,3 +662,312 @@
                                         ))}
                                     </select>
                                 </div>
+                                
+                                {(searchTerm || filterMonth || filterStatus !== 'all' || filterPlatform !== 'all') && (
+                                    <button 
+                                        onClick={() => {
+                                            setSearchTerm('');
+                                            setFilterMonth('');
+                                            setFilterStatus('all');
+                                            setFilterPlatform('all');
+                                        }}
+                                        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition shadow-sm font-medium"
+                                    >
+                                        Limpar Filtros
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- GRID DE TAREFAS --- */}
+                    <main className="container mx-auto px-4 py-8">
+                        {loading && rawTasks.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 animate-fadeInUp">
+                                <div className="loader mb-4"></div>
+                                <p className="text-gray-600 font-medium">Carregando tarefas...</p>
+                                <p className="text-sm text-gray-400 mt-2">Sincronizando com o banco de dados</p>
+                            </div>
+                        ) : filteredTasks.length === 0 ? (
+                            <div className="text-center py-20 bg-white rounded-xl border-2 border-dashed border-gray-300 animate-fadeInUp">
+                                <Icon name="Inbox" size={64} className="mx-auto text-gray-300 mb-4" />
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhuma tarefa encontrada</h3>
+                                <p className="text-gray-500 mb-4">
+                                    {searchTerm ? 'Tente ajustar sua busca ou' : 'Tente ajustar os'} filtros acima
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mb-4 text-sm text-gray-500 flex justify-between items-center">
+                                    <span>Exibindo <span className="font-bold text-primary">{filteredTasks.length}</span> tarefa(s)</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filteredTasks.map((task, index) => {
+                                        const status = getFieldValue(task, FIELD_KEYS.STATUS, 'Sem Status');
+                                        const approval = getFieldValue(task, FIELD_KEYS.APROVACAO, 'Pendente');
+                                        const title = getFieldValue(task, FIELD_KEYS.TITLE, 'Sem Título');
+                                        const platform = getFieldValue(task, FIELD_KEYS.PLATAFORMA, 'Geral');
+                                        const dueDate = getFieldValue(task, FIELD_KEYS.DATA_ENTREGA);
+                                        const isOverdue = isDateOverdue(dueDate) && !status.toLowerCase().includes('conclu') && !status.toLowerCase().includes('finaliz');
+                                        
+                                        const style = getStatusStyle(status, approval);
+                                        
+                                        return (
+                                            <div 
+                                                key={task._internalId}
+                                                onClick={() => setSelectedTask(task)}
+                                                className="card-hover bg-white rounded-xl border border-gray-200 p-5 cursor-pointer group relative overflow-hidden flex flex-col h-full animate-fadeInUp"
+                                                style={{ animationDelay: `${index * 50}ms`, borderTop: `4px solid ${style.border.replace('border-', '#').replace('-300', '')}` }}
+                                            >
+                                                {/* Badge de Atraso */}
+                                                {isOverdue && (
+                                                    <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm z-10">
+                                                        <Icon name="AlertTriangle" size={10} />
+                                                        ATRASADA
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="flex justify-between items-start mb-3 mt-1">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-1 rounded-md border border-gray-200">
+                                                        {platform}
+                                                    </span>
+                                                    <div className={`${style.bg} ${style.text} px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 border ${style.border}`}>
+                                                        <Icon name={style.icon} size={10} />
+                                                        {status}
+                                                    </div>
+                                                </div>
+
+                                                <h3 className="text-base font-bold text-gray-900 mb-3 leading-snug line-clamp-2 flex-grow">
+                                                    {title}
+                                                </h3>
+
+                                                <div className="space-y-2 text-xs border-t border-gray-100 pt-3">
+                                                    <div className="flex items-center gap-2 text-gray-600">
+                                                        <Icon name="Calendar" size={12} className="text-gray-400" />
+                                                        <span className={isOverdue ? "font-bold text-red-600" : "font-medium"}>
+                                                            Entrega: {formatDate(dueDate)}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-2">
+                                                        <Icon name="FileCheck" size={12} className="text-gray-400" />
+                                                        <span className={`font-semibold ${
+                                                            approval.toLowerCase().includes('reprovado') 
+                                                                ? 'text-red-600' 
+                                                                : approval.toLowerCase().includes('aprovado')
+                                                                ? 'text-green-600'
+                                                                : 'text-yellow-600'
+                                                        }`}>
+                                                            {approval}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-3 pt-2 flex justify-end items-center text-xs text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                                    <span>Ver detalhes</span>
+                                                    <Icon name="ArrowRight" size={12} className="ml-1" />
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
+                    </main>
+
+                    {/* --- MODAL DE DETALHES --- */}
+                    {selectedTask && (
+                        <div 
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 modal-backdrop" 
+                            onClick={() => setSelectedTask(null)}
+                        >
+                            <div 
+                                className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-fadeInUp" 
+                                onClick={e => e.stopPropagation()}
+                            >
+                                {/* Modal Header */}
+                                <div className="p-6 bg-gradient-to-r from-primary to-secondary text-white flex justify-between items-start sticky top-0 z-10 shrink-0">
+                                    <div className="flex-1 pr-4">
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border border-white/10">
+                                                {getFieldValue(selectedTask, FIELD_KEYS.PLATAFORMA)}
+                                            </span>
+                                            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold border border-white/10">
+                                                ID: {selectedTask._row || 'N/A'}
+                                            </span>
+                                        </div>
+                                        <h2 className="text-xl md:text-2xl font-bold leading-tight">
+                                            {getFieldValue(selectedTask, FIELD_KEYS.TITLE)}
+                                        </h2>
+                                    </div>
+                                    <button 
+                                        onClick={() => setSelectedTask(null)} 
+                                        className="text-white/80 hover:text-white transition p-2 hover:bg-white/10 rounded-lg"
+                                    >
+                                        <Icon name="X" size={24} />
+                                    </button>
+                                </div>
+
+                                {/* Modal Body */}
+                                <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
+                                    {/* Status Cards */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                        <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                                            <div className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-bold">Status Atual</div>
+                                            <div className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                                                <Icon name={getStatusStyle(getFieldValue(selectedTask, FIELD_KEYS.STATUS), '').icon} size={20} className="text-primary" />
+                                                {getFieldValue(selectedTask, FIELD_KEYS.STATUS)}
+                                            </div>
+                                        </div>
+                                        <div className={`p-4 rounded-xl border shadow-sm ${
+                                            String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado')
+                                                ? 'bg-red-50 border-red-200'
+                                                : String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('aprovado')
+                                                ? 'bg-green-50 border-green-200'
+                                                : 'bg-yellow-50 border-yellow-200'
+                                        }`}>
+                                            <div className="text-xs uppercase tracking-wide mb-2 font-bold opacity-80">Aprovação</div>
+                                            <div className={`font-bold text-lg flex items-center gap-2 ${
+                                                String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado') ? 'text-red-700' : 
+                                                String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('aprovado') ? 'text-green-700' : 'text-yellow-700'
+                                            }`}>
+                                                <Icon name={
+                                                    String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado') ? 'XCircle' :
+                                                    String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('aprovado') ? 'CheckCircle2' : 'Clock'
+                                                } size={20} />
+                                                {getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Info Details */}
+                                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 mb-1 text-sm flex items-center gap-2">
+                                                    <Icon name="MessageSquare" size={14} className="text-primary" /> Assunto
+                                                </h4>
+                                                <p className="text-sm text-gray-600 pl-6">{getFieldValue(selectedTask, FIELD_KEYS.ASSUNTO) || 'Não especificado'}</p>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 mb-1 text-sm flex items-center gap-2">
+                                                    <Icon name="Calendar" size={14} className="text-primary" /> Data de Entrega
+                                                </h4>
+                                                <p className={`text-sm pl-6 font-medium ${isDateOverdue(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA)) ? 'text-red-600' : 'text-gray-600'}`}>
+                                                    {formatDate(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA))}
+                                                    {isDateOverdue(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA)) && 
+                                                        <span className="ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">ATRASADA</span>
+                                                    }
+                                                </p>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <h4 className="font-bold text-gray-900 mb-1 text-sm flex items-center gap-2">
+                                                    <Icon name="Link" size={14} className="text-primary" /> Link do Drive
+                                                </h4>
+                                                <div className="pl-6">
+                                                    {getFieldValue(selectedTask, FIELD_KEYS.LINK_DRIVE) ? (
+                                                        <a 
+                                                            href={getFieldValue(selectedTask, FIELD_KEYS.LINK_DRIVE)} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition bg-blue-50 px-3 py-1.5 rounded-md border border-blue-100"
+                                                        >
+                                                            <Icon name="ExternalLink" size={12} />
+                                                            Abrir arquivo no Google Drive
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-sm text-gray-400 italic">Nenhum link fornecido</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Observation */}
+                                    <div className="mb-6">
+                                        <h4 className="font-bold text-gray-800 mb-2 text-sm uppercase tracking-wide">Observação / Descrição</h4>
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap shadow-sm">
+                                            {getFieldValue(selectedTask, FIELD_KEYS.OBSERVACAO) || 'Sem observações registradas.'}
+                                        </div>
+                                    </div>
+
+                                    {/* Comments */}
+                                    <div>
+                                        <h4 className="font-bold text-gray-800 mb-2 text-sm uppercase tracking-wide flex items-center gap-2">
+                                            <Icon name="MessageCircle" size={16} /> Histórico de Comentários
+                                        </h4>
+                                        <div className="bg-gray-100/50 rounded-xl border border-gray-200 p-4 max-h-48 overflow-y-auto custom-scrollbar">
+                                            {String(getFieldValue(selectedTask, FIELD_KEYS.COMENTARIOS, '')).split('\n').filter(c => c.trim()).length > 0 ? (
+                                                <div className="space-y-3">
+                                                    {String(getFieldValue(selectedTask, FIELD_KEYS.COMENTARIOS, '')).split('\n').filter(c => c.trim()).map((comment, i) => (
+                                                        <div key={i} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm text-sm text-gray-700 relative pl-4 border-l-4 border-l-secondary">
+                                                            {comment}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-6 text-gray-400 text-sm italic">
+                                                    Nenhum comentário registrado.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Modal Footer Actions */}
+                                <div className="p-4 border-t border-gray-200 bg-white shrink-0">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <button 
+                                            onClick={() => handleApprove(selectedTask, 'approve')}
+                                            className="btn-action bg-green-600 text-white hover:bg-green-700 shadow-sm flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition"
+                                        >
+                                            <Icon name="ThumbsUp" size={18} /> <span className="hidden sm:inline">Aprovar</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => handleApprove(selectedTask, 'reject')}
+                                            className="btn-action bg-red-600 text-white hover:bg-red-700 shadow-sm flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition"
+                                        >
+                                            <Icon name="ThumbsDown" size={18} /> <span className="hidden sm:inline">Reprovar</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => handleComment(selectedTask)}
+                                            className="btn-action bg-primary text-white hover:bg-primary/90 shadow-sm flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition"
+                                        >
+                                            <Icon name="MessageCircle" size={18} /> <span className="hidden sm:inline">Comentar</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => handleApprove(selectedTask, 'custom')}
+                                            className="btn-action bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 shadow-sm flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition"
+                                        >
+                                            <Icon name="Edit" size={18} /> <span className="hidden sm:inline">Customizar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- TOAST DE FEEDBACK --- */}
+                    {modalMessage && (
+                        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[100] animate-slideIn">
+                            <div className={`px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-medium text-white min-w-[300px] justify-center ${
+                                modalMessage.type === 'loading' ? 'bg-primary' : 
+                                modalMessage.type === 'error' ? 'bg-red-600' : 'bg-green-600'
+                            }`}>
+                                {modalMessage.type === 'loading' && <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>}
+                                {modalMessage.type === 'success' && <Icon name="CheckCircle2" size={20} />}
+                                {modalMessage.type === 'error' && <Icon name="AlertTriangle" size={20} />}
+                                <span>{modalMessage.text}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
