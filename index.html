@@ -1,1373 +1,675 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Tarefas PSR</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <meta name="robots" content="noindex, nofollow">
-  <link rel="icon" href="https://i.postimg.cc/GmXTzRfR/calendario.png" type="image/png">
-<style>
-:root {
-  --primary-color: #3989c1;
-  --primary-light: #7aa9e9;
-  --success-color: #28a745;
-  --warning-color: #ffc107;
-  --accent-color: #ffb600;
-  --danger-color: #d0021b;
-  --neutral-gray-color: #808080;
-  --light-gray: #f7f7f7;
-  --medium-gray: #e0e0e0;
-  --dark-gray: #666666;
-  --text-color: #333333;
-  --card-bg: #ffffff;
-  --border-radius: 10px;
-  --shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  --highlight-yellow: rgba(255, 255, 0, 0.3);
-  --highlight-orange: rgba(255, 165, 0, 0.3);
-  --highlight-blue: rgba(0, 123, 255, 0.2);
-}
-body {
-  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  background-color: transparent;
-  color: var(--text-color);
-  line-height: 1.55;
-  position: relative;
-  min-height: 100vh;
-}
-.page-background-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 600px;
-  background-color: #cccccc;
-  background-image: url('https://i.postimg.cc/BvDKGnBG/bannerv2.jpg');
-  background-size: cover;
-  background-position: center;
-  z-index: -1;
-}
-.content-wrapper {
-  position: relative;
-  z-index: 1;
-  background-color: transparent;
-  flex-grow: 1;
-  padding-top: 1rem;
-}
-.main-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem 2rem 2rem;
-  background-color: transparent;
-}
-.header {
-  max-width: 1400px;
-  margin: 0 auto;
-  margin-bottom: 1rem;
-}
-.header h1 {
-  color: var(--primary-color);
-  font-size: 3.5rem;
-  text-align: center;
-  font-weight: 1000;
-  text-shadow: 0px 1px 1px rgba(0,0,0,0.2), 0px 0px 10px rgba(255,255,255,0.9);
-  letter-spacing: 0.5px;
-}
-@media (max-width: 768px) {
-  .page-background-banner {
-      height: 300px;
-      background-image: url('https://i.postimg.cc/Z5Xdgd3c/Banner-mobile.jpg');
-  }
-  .content-wrapper {
-      padding-top: 1rem;
-  }
-  .main-container {
-      padding: 0 1rem 1rem 1rem;
-  }
-}
-#status-messages {
-  color: var(--danger-color);
-  margin-bottom: 1.5rem;
-  text-align: center;
-  min-height: 1.2em;
-  font-weight: normal;
-  background-color: transparent;
-  padding: 0;
-  border-radius: 0;
-  display: block;
-  width: 100%;
-  text-shadow: 0px 0px 5px rgba(255,255,255,0.8);
-}
-#status-messages:empty { display: none; }
-@keyframes intense-blink {
-  0%, 100% { opacity: 1; transform: scale(1.05); color: var(--danger-color);}
-  50% { opacity: 0.3; transform: scale(1); color: var(--accent-color);}
-}
-.pending-tasks-message.blinking { animation: intense-blink 1s infinite; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel PSR - Live Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-/* === FILTROS MODERNIZADOS === */
-.filters-container {
-  display: flex;
-  justify-content: center;
-  gap: 1.2rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  background: linear-gradient(135deg, rgba(7, 56, 108, 0.95), rgba(7, 56, 108, 1));
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(7, 56, 108, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-/* LAYOUT MOBILE PARA FILTROS */
-@media (max-width: 768px) {
-  .filters-container {
-      flex-direction: column;
-      gap: 0.8rem;
-      padding: 1.2rem;
-  }
-  .filters-container select,
-  .filters-container .btn-filter-action {
-      width: 100%;
-      margin: 0;
-      min-height: 48px;
-  }
-}
-.filters-container select,
-.filters-container .btn-filter-action {
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: var(--primary-color);
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  font-size: 0.95rem;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-.filters-container select::before,
-.filters-container .btn-filter-action::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.6s;
-}
-.filters-container select:hover,
-.filters-container .btn-filter-action:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 1);
-}
-.filters-container select:hover::before,
-.filters-container .btn-filter-action:hover::before {
-  left: 100%;
-}
-.filters-container select:active,
-.filters-container .btn-filter-action:active {
-  transform: translateY(0px) scale(0.98);
-}
-.filters-container .btn-filter-action.clear-filter-btn {
-  background: linear-gradient(135deg, var(--accent-color), #ff8c00);
-  color: white;
-  border-color: rgba(255, 182, 0, 0.5);
-  font-weight: 700;
-}
-.filters-container .btn-filter-action.clear-filter-btn:hover {
-  background: linear-gradient(135deg, #ff8c00, var(--accent-color));
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(255, 182, 0, 0.3);
-}
-.btn-concluidos-mes {
-  background: linear-gradient(135deg, #7aa9e9, var(--primary-color));
-  color: #fff;
-  border: 2px solid rgba(122, 169, 233, 0.5);
-  font-weight: 700;
-  box-shadow: 0 4px 15px rgba(57,137,193,0.2);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.btn-concluidos-mes:hover, .btn-concluidos-mes:focus {
-  background: linear-gradient(135deg, var(--primary-color), #2c5f8a);
-  color: #fff;
-  border-color: rgba(57, 137, 193, 0.8);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(57,137,193,0.3);
-}
-/* Efeito de ondulação para os botões */
-.filters-container select,
-.filters-container .btn-filter-action {
-  position: relative;
-  overflow: hidden;
-}
-.filters-container select::after,
-.filters-container .btn-filter-action::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-.filters-container select:active::after,
-.filters-container .btn-filter-action:active::after {
-  width: 300px;
-  height: 300px;
-}
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#003366',
+                        'primary-foreground': '#FFFFFF',
+                        secondary: '#4682B4',
+                        muted: '#F5F5F5',
+                        'muted-foreground': '#4B4B4B',
+                        border: '#E5E7EB',
+                        foreground: '#003366',
+                        background: '#FFFFFF',
+                        card: '#FFFFFF',
+                        
+                        // Status colors derived from Backup logic
+                        success: '#28a745', 
+                        warning: '#ffc107',
+                        danger: '#d0021b',
+                        info: '#3989c1'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 
-/* ==== SUTIL: AJUSTE DE ESPAÇAMENTO VERTICAL DESKTOP ==== */
-@media (min-width: 769px) {
-  .filters-container {
-    padding-top: 0.8rem;
-    padding-bottom: 0.8rem;
-    gap: 1rem;
-  }
-  .card-header {
-    padding-top: 0.7rem;
-    padding-bottom: 0.7rem;
-  }
-  .card-content-wrapper {
-    padding-top: 0.9rem;
-    padding-bottom: 0.9rem;
-  }
-  .card-summary, .card-details {
-    gap: 0.6rem;
-  }
-  .card-actions {
-    margin-top: 0.7rem;
-    padding-top: 0.7rem;
-    padding-bottom: 0.4rem;
-  }
-}
+    <style type="text/tailwindcss">
+        @layer components {
+            .text-display { @apply text-4xl font-bold tracking-tight; font-family: 'Poppins', sans-serif; }
+            .text-heading { @apply text-xl font-semibold tracking-tight; font-family: 'Poppins', sans-serif; }
+            .text-body { @apply font-sans text-sm font-normal leading-relaxed; }
+            .text-label { @apply font-sans text-xs font-medium uppercase tracking-wider; }
+            .card-elevated { @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-all duration-200; }
+            .card-elevated:hover { @apply shadow-md transform -translate-y-1; }
+            
+            /* Custom Status Styles */
+            .status-pill { @apply px-2 py-1 rounded-md text-xs font-bold inline-flex items-center gap-1; }
+            .btn-action { @apply flex-1 py-2 rounded-md font-medium transition-colors text-sm flex items-center justify-center gap-2; }
+        }
 
-/* ==== DESTACA LABELS DOS CAMPOS PRINCIPAIS NOS CARDS ==== */
-.field-label-custom {
-  color: var(--dark-gray);
-  font-weight: 500;
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-
-/* Aplica cor mais forte para os campos principais */
-.card-summary .card-field-custom .field-label-custom,
-.card-details .card-field-custom .field-label-custom {
-  color: #265385;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-/* Para cada campo principal, cor ainda mais forte */
-.card-summary .card-field-custom:nth-child(1) .field-label-custom, /* Status */
-.card-summary .card-field-custom:nth-child(2) .field-label-custom, /* Assunto */
-.card-summary .card-field-custom:nth-child(3) .field-label-custom, /* Observação */
-.card-summary .dates-group .field-label-custom, /* Data de Entrega, Data da Postagem */
-.card-details .card-field-custom:nth-child(1) .field-label-custom, /* Aprovação */
-.card-details .card-field-custom:nth-child(2) .field-label-custom, /* Plataforma */
-.card-details .card-field-custom:nth-child(3) .field-label-custom, /* Link do Drive */
-.card-details .card-field-custom:nth-child(4) .field-label-custom /* Comentários */ {
-  color: #163657;
-  font-weight: 800;
-}
-
-/* Mantém todos os outros labels neutros */
-.card-summary .card-field-custom:not(:nth-child(-n+3)) .field-label-custom,
-.card-details .card-field-custom:not(:nth-child(-n+4)) .field-label-custom {
-  color: var(--dark-gray);
-  font-weight: 500;
-}
-
-/* ===== RESTANTE DOS ESTILOS DOS CARDS (SEM ALTERAÇÃO) ===== */
-.card-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-.card {
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-  overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  padding-bottom: 20px;
-}
-.card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1);}
-@keyframes blink-header-effect {
-  0%, 100% { background-color: var(--danger-color);}
-  50% { background-color: var(--accent-color);}
-}
-.card-header.blinking-overdue { animation: blink-header-effect 1.2s infinite;}
-.card-header {
-  color: white;
-  padding: 1rem 1.25rem;
-  font-weight: 500;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--primary-color);
-}
-.card::after {
-  content: '';
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid var(--primary-color);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  opacity: 0.7;
-  z-index: 10;
-}
-.card.expanded::after {
-  transform: translateX(-50%) rotate(180deg);
-  border-top-color: var(--primary-light);
-  opacity: 0.9;
-}
-.card-header.header-status-concluido { background-color: var(--success-color);}
-.card-header.header-aprovacao-pendente { background-color: var(--warning-color); color: var(--text-color);}
-.card-header.header-aprovacao-reprovado { background-color: var(--danger-color);}
-.card-header.header-status-critical-issue { background-color: var(--neutral-gray-color);}
-.card-header.header-status-critical-issue .expand-icon::before {
-  font-family: "Font Awesome 6 Free";
-  font-weight: 900;
-  content: "\f00d";
-}
-.card-title {
-  display: flex; align-items: center; gap: 0.3rem;
-  font-weight: bold;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: calc(100% - 30px);
-  font-size: 1.1rem;
-}
-.platform-icons-wrapper .social-icon {
-  font-size: 1.1rem;
-  margin-right: 0.2rem;
-  flex-shrink: 0;
-}
-.expand-icon { transition: transform 0.3s ease; font-size: 1rem;}
-.card.expanded .expand-icon { transform: rotate(180deg);}
-.card-content-wrapper { padding: 1.25rem;}
-.card-summary, .card-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.card-details {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: max-height 0.5s ease-out, opacity 0.3s ease-out, margin-top 0.5s ease-out, padding-top 0.5s ease-out;
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-.card.expanded .card-details {
-  max-height: 2000px;
-  opacity: 1;
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--medium-gray);
-}
-.card-field-custom { text-align: center;}
-.field-value-custom {
-  word-break: break-word;
-  display: block;
-  font-size: 0.95rem;
-  color: var(--text-color);
-  white-space: normal;
-  overflow: visible;
-  text-overflow: ellipsis;
-}
-.field-value-custom a.link-field {
-  color: var(--primary-color); text-decoration: none; display: inline-flex;
-  align-items: center; gap: 0.3rem; justify-content: center;
-  white-space: normal;
-}
-.field-value-custom div.comment-item {
-  margin-bottom: 0.5rem;
-  text-align: left;
-  white-space: pre-wrap;
-  background-color: var(--light-gray);
-  padding: 0.5rem;
-  border-radius: calc(var(--border-radius) - 4px);
-  font-size: 0.9rem;
-}
-.status-highlight-yellow {
-  background: linear-gradient(135deg, rgba(255, 235, 59, 0.4), rgba(255, 193, 7, 0.3));
-  padding: 0.3em 0.6em;
-  border-radius: 8px;
-  display: inline-block;
-  font-weight: 600;
-  border: 1px solid rgba(255, 193, 7, 0.5);
-  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-.status-highlight-yellow::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.8s;
-}
-.status-highlight-yellow:hover::before { left: 100%;}
-.status-highlight-orange {
-  background: linear-gradient(135deg, rgba(255, 152, 0, 0.4), rgba(255, 87, 34, 0.3));
-  padding: 0.3em 0.6em;
-  border-radius: 8px;
-  display: inline-block;
-  font-weight: 600;
-  color: #d84315;
-  border: 1px solid rgba(255, 87, 34, 0.5);
-  box-shadow: 0 2px 8px rgba(255, 87, 34, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-.status-highlight-orange::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.8s;
-}
-.status-highlight-orange:hover::before { left: 100%;}
-.status-highlight-blue {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(0, 123, 255, 0.25));
-  padding: 0.3em 0.6em;
-  border-radius: 8px;
-  display: inline-block;
-  color: var(--primary-color);
-  font-weight: 600;
-  border: 1px solid rgba(0, 123, 255, 0.4);
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
-  position: relative;
-  overflow: hidden;
-}
-.status-highlight-blue::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.8s;
-}
-.status-highlight-blue:hover::before { left: 100%;}
-.status-text-strike {
-  text-decoration: line-through;
-  opacity: 0.7;
-  position: relative;
-}
-.status-text-strike::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--danger-color), transparent);
-  transform: translateY(-50%);
-}
-@keyframes blink-approval-warning-effect {
-  0%, 100% { background-color: var(--warning-color); color: var(--text-color);}
-  50% { background-color: var(--accent-color); color: var(--text-color);}
-}
-.card-header.header-approval-warning-blinking {
-  animation: blink-approval-warning-effect 1.2s infinite;
-}
-@keyframes blink-date-item-warning-effect {
-  0%, 100% { background-color: var(--light-gray); border: 1px solid var(--warning-color);}
-  50% { background-color: rgba(255, 193, 7, 0.25); border: 1px solid var(--accent-color);}
-}
-.date-item.date-item-blinking-warning {
-  animation: blink-date-item-warning-effect 1.2s infinite;
-}
-.approval-pending-notice {
-  text-align: center;
-  font-weight: bold;
-  color: var(--warning-color);
-  margin-bottom: 0.6rem;
-  font-size: 0.9em;
-  padding: 0.3rem;
-  background-color: rgba(255, 193, 7, 0.15);
-  border-radius: 4px;
-  border: 1px solid var(--warning-color);
-}
-.dates-group {
-  border-radius: calc(var(--border-radius) - 4px);
-  margin-top: 0.5rem;
-}
-.dates-group .field-label-custom {
-  margin-bottom: 0.4rem;
-  font-size: 0.8em;
-}
-.dates-group .date-pair {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  text-align: center;
-}
-.dates-group .date-item {
-  flex: 1;
-  background-color: var(--light-gray);
-  padding: 0.6rem;
-  border-radius: calc(var(--border-radius) - 6px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-.dates-group .date-item .field-value-custom { font-size: 0.85em;}
-.card-actions {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-  padding: 1.25rem 0.5rem 0.5rem 0.5rem;
-  border-top: 1px dashed var(--medium-gray);
-}
-.btn-action {
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  font-weight: 500;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  flex-grow: 1;
-  text-align: center;
-  justify-content: center;
-}
-.btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15);}
-.btn-action i { font-size: 1em;}
-.btn-aprovacao { background-color: var(--primary-color); color: white;}
-.btn-aprovacao:hover { background-color: #ffb600;}
-.btn-comentar { background-color: var(--primary-color); color: white;}
-.btn-comentar:hover { background-color: #ffb600;}
-.empty-state { text-align: center; padding: 3rem; background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); grid-column: 1 / -1;}
-.empty-state i { font-size: 3.5rem; color: var(--dark-gray); margin-bottom: 1.5rem;}
-.empty-state h3 { color: var(--dark-gray); margin-bottom: 0.75rem; font-size: 1.5rem; font-weight: 500;}
-.custom-modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  display: flex; justify-content: center; align-items: center;
-  opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 1000;
-}
-.custom-modal-overlay.visible { opacity: 1; visibility: visible;}
-.custom-modal {
-  background-color: white; padding: 2rem 2.5rem;
-  border-radius: var(--border-radius);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  text-align: center;
-  transform: scale(0.9); transition: transform 0.3s ease;
-}
-.custom-modal-overlay.visible .custom-modal { transform: scale(1);}
-.custom-modal h3 { font-size: 1.4rem; color: var(--primary-color); margin-top: 0; margin-bottom: 0.75rem;}
-.custom-modal p { font-size: 1rem; color: var(--text-color); margin-bottom: 1.5rem;}
-.custom-modal .countdown { font-size: 0.9rem; color: var(--dark-gray);}
-.card.card-aprovado-background { background-color: #ffffff;}
-.card.card-reprovado-background { background-color: #ffffff;}
-.card.card-pendente-background { background-color: #ffffff;}
-.approval-status-notice {
-  text-align: center;
-  font-weight: bold;
-  color: var(--primary-color);
-  margin-bottom: 0.6rem;
-  font-size: 0.9em;
-  padding: 0.3rem;
-  background-color: #d1e7ff;
-  border-radius: 4px;
-  border: 1px solid var(--primary-color);
-}
-.btn-concluidos-mes {
-  background-color: #28a745 !important;
-  color: #fff !important;
-  border-color: #28a745 !important;
-}
-.btn-concluidos-mes:hover {
-  background-color: #218838 !important;
-  border-color: #218838 !important;
-  opacity: 0.85;
-}
-.btn-concluidos-mes.btn-ocultando {
-  background-color: #ffb600 !important;
-  color: #fff !important;
-  border-color: #ffb600 !important;
-}
-.btn-concluidos-mes.btn-ocultando:hover {
-  background-color: #cf9a16 !important;
-  border-color: #cf9a16 !important;
-  color: #fff !important;
-}
-</style>
-
-
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp { animation: fadeInUp 0.5s ease-out forwards; }
+        
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body>
-  <div class="page-background-banner" id="pageBackgroundBanner"></div>
-  <div class="content-wrapper">
-    <div class="header">
-      <h1>Painel de Tarefas PSR</h1>
-    </div>
-    <div class="main-container">
-      <div id="status-messages"></div>
-      <div class="filters-container" id="filtersContainer"></div>
-      <div id="cardContainer" class="card-container"></div>
-    </div>
-  </div>
-  <div class="custom-modal-overlay" id="successModalOverlay">
-    <div class="custom-modal">
-        <h3 id="modalTitle">Sucesso!</h3>
-        <p id="modalMessage">Ação Completa.</p>
-        <p class="countdown">Fechando...</p>
-    </div>
-  </div>
-  <script>
-    // Firebase fetch
-    let allData = [];
-    let activeFilters = {
-        month: null,
-        status: null,
-        aprovacao: null,
-        platform: null
-    };
-    let successModalTimeout;
-    let showConcluidosAprovados = false;
+<body class="bg-gray-50 font-sans text-foreground">
+    <div id="root"></div>
 
-    function loadData() {
-      document.getElementById('status-messages').textContent = 'Carregando dados...';
-      fetch('https://agenda-portal-2d149-default-rtdb.firebaseio.com/agenda.json')
-        .then(r => r.json())
-        .then(json => {
-          if (!json) {
-            document.getElementById('status-messages').textContent = 'Nenhum dado encontrado.';
-            return;
-          }
-          let items = Object.values(json);
-          allData = items.map(item => ({
-             ...item,
-             _internalId: item._internalId || Math.random().toString(36).substr(2, 9)
-          }));
-          populateFilters();
-          const currentMonth = new Date().getMonth();
-          const currentYear = new Date().getFullYear();
-          const currentMonthValue = `${currentYear}-${currentMonth}`;
-          const monthFilterSelect = document.getElementById('monthFilter');
-          if (monthFilterSelect && Array.from(monthFilterSelect.options).some(opt => opt.value === currentMonthValue)) {
-              monthFilterSelect.value = currentMonthValue;
-              activeFilters.month = currentMonthValue;
-          }
-          applyFiltersAndRender();
-        })
-        .catch((error) => {
-          console.error('Erro ao carregar dados do Firebase:', error);
-          document.getElementById('status-messages').textContent = 'Erro ao carregar dados. Verifique o console para detalhes.';
-        });
-    }
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useCallback } = React;
 
-    const FIELD_KEYS = {
-        TITLE: ['Título', 'Nome', 'Title'],
-        ASSUNTO: ['Assunto'],
-        STATUS: ['Status', 'Status:'],
-        OBSERVACAO: ['Observação', 'Observacao', 'Observacão'],
-        APROVACAO: ['Aprovação', 'Aprovacao'],
-        PLATAFORMA: ['Plataforma', 'Plataformas'],
-        LINK_DRIVE: ['Link do Drive', 'Link Drive', 'Drive'],
-        COMENTARIOS: ['comments', 'Comentários', 'Comentarios'],
-        DATA_POSTAGEM: ['Data da Postagem', 'Data Postagem', 'dataPostagem', 'Data', 'Data:'],
-        DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
-    };
-
-    function showSuccessModal(title, message, duration = 1250, callback) {
-        const overlay = document.getElementById('successModalOverlay');
-        document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalMessage').textContent = message;
-        overlay.classList.add('visible');
-        clearTimeout(successModalTimeout);
-        successModalTimeout = setTimeout(() => {
-            overlay.classList.remove('visible');
-            if (callback) callback();
-        }, duration);
-    }
-    
-    function updateStatusMessage() {
-        const statusMessagesDiv = document.getElementById('status-messages');
-        statusMessagesDiv.innerHTML = ''; 
-        statusMessagesDiv.classList.remove('blinking', 'pending-tasks-message');
-
-        let hasPendingTasks = false;
-        for (const item of allData) {
-            const statusValue = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
-            const aprovacaoValue = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
-            if (statusValue === 'aguardando resposta' || aprovacaoValue === 'reprovado' || aprovacaoValue === 'pendente') {
-                hasPendingTasks = true;
-                break;
-            }
-        }
-
-        if (hasPendingTasks) {
-            statusMessagesDiv.textContent = 'Você tem pendências a serem resolvidas!';
-            statusMessagesDiv.classList.add('pending-tasks-message', 'blinking');
-        } 
-    }
-
-    function getUniqueValues(fieldKeysArray) {
-        const values = new Set();
-        allData.forEach(item => {
-            const val = getFieldValue(item, fieldKeysArray);
-            if (val !== undefined && String(val).trim() !== '') {
-                values.add(String(val).trim());
-            }
-        });
-        return Array.from(values).sort();
-    }
-    function getUniqueMonths() {
-        const dateMap = {};
-        allData.forEach(item => {
-            const dateValueStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
-            if (dateValueStr) {
-                let dateValue = parseDate(dateValueStr);
-                if (dateValue && !isNaN(dateValue.getTime())) {
-                    const month = dateValue.getMonth();
-                    const year = dateValue.getFullYear();
-                    const mapKey = `${year}-${String(month).padStart(2, '0')}`;
-                    if (!dateMap[mapKey]) {
-                        dateMap[mapKey] = { year: year, month: month, label: `${getMonthName(month)} ${year}`, sortKey: parseInt(`${year}${String(month).padStart(2, '0')}`) };
-                    }
-                }
-            }
-        });
-        return Object.values(dateMap).sort((a, b) => a.sortKey - b.sortKey);
-    }
-
-    // --------------------------
-    // AJUSTE DE FILTROS E BOTÃO
-    // --------------------------
-    function populateFilters() {
-        const filtersContainer = document.getElementById('filtersContainer');
-        filtersContainer.innerHTML = ''; 
-
-        const months = getUniqueMonths();
-        if (months.length > 0) {
-            const monthSelect = document.createElement('select');
-            monthSelect.id = 'monthFilter';
-            monthSelect.innerHTML = '<option value="">Todos os Meses</option>';
-            months.forEach(m => {
-                monthSelect.innerHTML += `<option value="${m.year}-${m.month}">${m.label}</option>`;
-            });
-            monthSelect.addEventListener('change', (e) => {
-                activeFilters.month = e.target.value || null;
-                applyFiltersAndRender();
-            });
-            filtersContainer.appendChild(monthSelect);
-        }
-        const statuses = getUniqueValues(FIELD_KEYS.STATUS);
-        if (statuses.length > 0) {
-            const statusSelect = document.createElement('select');
-            statusSelect.id = 'statusFilter';
-            statusSelect.innerHTML = '<option value="">Todos os Status</option>';
-            statuses.forEach(s => {
-                statusSelect.innerHTML += `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`;
-            });
-            statusSelect.addEventListener('change', (e) => {
-                activeFilters.status = e.target.value || null;
-                applyFiltersAndRender();
-            });
-            filtersContainer.appendChild(statusSelect);
-        }
-        const aprovacaoStatusFixos = ["Aprovado", "Reprovado", "Pendente"];
-        if (aprovacaoStatusFixos.length > 0) {
-            const aprovacaoSelect = document.createElement("select");
-            aprovacaoSelect.id = "aprovacaoFilter";
-            aprovacaoSelect.innerHTML = "<option value=\"\">Todas as Aprovações</option>";
-            aprovacaoStatusFixos.forEach(a => {
-                aprovacaoSelect.innerHTML += `<option value="${escapeHtml(a.toLowerCase())}">${escapeHtml(a)}</option>`;
-            });
-            aprovacaoSelect.addEventListener("change", (e) => {
-                activeFilters.aprovacao = e.target.value || null;
-                applyFiltersAndRender();
-            });
-            filtersContainer.appendChild(aprovacaoSelect);
-        }
-        const platforms = getUniqueValues(FIELD_KEYS.PLATAFORMA);
-        if (platforms.length > 0) {
-            const platformSelect = document.createElement('select');
-            platformSelect.id = 'platformFilter';
-            platformSelect.innerHTML = '<option value="">Todas as Plataformas</option>';
-            const allIndividualPlatforms = new Set();
-            allData.forEach(item => {
-                const platformValue = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
-                if (platformValue) {
-                    String(platformValue).split(',').forEach(p => allIndividualPlatforms.add(p.trim()));
-                }
-            });
-            Array.from(allIndividualPlatforms).sort().forEach(p => {
-                 if (p) platformSelect.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
-            });
-            platformSelect.addEventListener('change', (e) => {
-                activeFilters.platform = e.target.value || null;
-                applyFiltersAndRender();
-            });
-            filtersContainer.appendChild(platformSelect);
-        }
-
-        // ---- NOVO BOTÃO ----
-        const btnMostrarConcluidos = document.createElement("button");
-        btnMostrarConcluidos.innerHTML = showConcluidosAprovados ? 	'<i class="fas fa-eye"></i>&nbsp;&nbsp;Concluídos' : '<i class="fas fa-eye-slash"></i>&nbsp;&nbsp;Concluídos';        btnMostrarConcluidos.className = "btn-filter-action btn-concluidos-mes" + (showConcluidosAprovados ? " btn-ocultando" : "");
-
-        btnMostrarConcluidos.addEventListener("click", () => {
-    // Salva os filtros ativos antes de atualizar
-    const filtroAtualMes = activeFilters.month;
-    const filtroAtualStatus = activeFilters.status;
-    const filtroAtualAprovacao = activeFilters.aprovacao;
-    const filtroAtualPlatform = activeFilters.platform;
-
-    showConcluidosAprovados = !showConcluidosAprovados;
-    populateFilters();
-
-    // Restaura os filtros após recriar os selects
-    if (filtroAtualMes && document.getElementById('monthFilter')) {
-        document.getElementById('monthFilter').value = filtroAtualMes;
-        activeFilters.month = filtroAtualMes;
-    }
-    if (filtroAtualStatus && document.getElementById('statusFilter')) {
-        document.getElementById('statusFilter').value = filtroAtualStatus;
-        activeFilters.status = filtroAtualStatus;
-    }
-    if (filtroAtualAprovacao && document.getElementById('aprovacaoFilter')) {
-        document.getElementById('aprovacaoFilter').value = filtroAtualAprovacao;
-        activeFilters.aprovacao = filtroAtualAprovacao;
-    }
-    if (filtroAtualPlatform && document.getElementById('platformFilter')) {
-        document.getElementById('platformFilter').value = filtroAtualPlatform;
-        activeFilters.platform = filtroAtualPlatform;
-    }
-
-    applyFiltersAndRender();
-});
-        filtersContainer.appendChild(btnMostrarConcluidos);
-
-        // ---- FIM DO BOTÃO ----
-
-        const resultadosBtn = document.createElement("a");
-        resultadosBtn.href = "#"; // Defina o link correto se necessário
-        resultadosBtn.textContent = "Resultados";
-        resultadosBtn.className = "btn-filter-action btn-comunicado";
-        filtersContainer.appendChild(resultadosBtn);
-
-        const limparFiltrosBtn = document.createElement("button");
-        limparFiltrosBtn.textContent = "Limpar Filtros";
-        limparFiltrosBtn.className = "btn-filter-action clear-filter-btn";
-        limparFiltrosBtn.addEventListener("click", () => {
-            activeFilters.month = null;
-            activeFilters.status = null;
-            activeFilters.aprovacao = null;
-            activeFilters.platform = null;
-            const selects = filtersContainer.querySelectorAll("select");
-            selects.forEach(select => {
-                select.value = ""; 
-            });
-            applyFiltersAndRender();
-        });
-        filtersContainer.appendChild(limparFiltrosBtn);
-    }
-
-function applyFiltersAndRender() {
-    let filteredData = [...allData];
-
-    // Filtros normais
-    if (activeFilters.month) {
-        const [year, month] = activeFilters.month.split('-').map(Number);
-        filteredData = filteredData.filter(item => {
-            const itemDateStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
-            if (!itemDateStr) return false;
-            let itemDate = parseDate(itemDateStr);
-            return itemDate && itemDate.getMonth() === month && itemDate.getFullYear() === year;
-        });
-    }
-    if (activeFilters.status) {
-        filteredData = filteredData.filter(item => getFieldValue(item, FIELD_KEYS.STATUS) === activeFilters.status);
-    }
-    if (activeFilters.aprovacao) {
-        const filterValue = activeFilters.aprovacao.toLowerCase();
-        filteredData = filteredData.filter(item => {
-            const itemAprovacao = getFieldValue(item, FIELD_KEYS.APROVACAO, "").toLowerCase();
-            return itemAprovacao.startsWith(filterValue);
-        });
-    }
-    if (activeFilters.platform) {
-        filteredData = filteredData.filter(item => {
-            const itemPlatforms = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
-            if (!itemPlatforms) return false;
-            return String(itemPlatforms).split(',').map(p => p.trim()).includes(activeFilters.platform);
-        });
-    }
-
-    // *** LÓGICA FINAL: mostra ou oculta concluídos/aprovados ***
-// *** LÓGICA FINAL: mostra ou oculta concluídos/aprovados ***
-if (showConcluidosAprovados) {
-    // Mostrar apenas concluídos/aprovados
-    filteredData = filteredData.filter(item => {
-        const status = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        const aprovacao = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        return (status === 'concluido' && aprovacao.startsWith('aprovado'));
-    });
-} else {
-    // Ocultar concluídos/aprovados
-    filteredData = filteredData.filter(item => {
-        const status = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        const aprovacao = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        return !(status === 'concluido' && aprovacao.startsWith('aprovado'));
-    });
-}
-
-renderCards(sortDataByGenericDate(filteredData, FIELD_KEYS.DATA_ENTREGA, true));
-updateStatusMessage();
-}
-    // --------------------------
-
-    function getMonthName(monthIndex) {
-      const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-      return months[monthIndex];
-    }
-    function sortDataByGenericDate(dataArray, dateFieldKeys, ascending = true) {
-        if (!dateFieldKeys || dateFieldKeys.length === 0) return dataArray;
-        return [...dataArray].sort((a, b) => {
-            const dateA = parseDate(getFieldValue(a, dateFieldKeys));
-            const dateB = parseDate(getFieldValue(b, dateFieldKeys));
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return ascending ? 1 : -1;
-            if (!dateB) return ascending ? -1 : 1;
-            return ascending ? (dateA.getTime() - dateB.getTime()) : (dateB.getTime() - dateA.getTime());
-        });
-    }
-    function parseDate(dateStr) {
-      if (!dateStr) return null;
-      if (dateStr instanceof Date) return dateStr;
-      if (typeof dateStr === 'string') {
-        try {
-          let d = null;
-          if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-              d = new Date(parts[2], parseInt(parts[1])-1, parts[0]);
-              if (isNaN(d.getTime())) {
-                d = new Date(parts[2], parseInt(parts[0])-1, parts[1]);
-              }
-            } else if (parts.length === 2) {
-              d = new Date(new Date().getFullYear(), parseInt(parts[1])-1, parts[0]);
-            }
-          } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
-             d = new Date(dateStr);
-          } else {
-            d = new Date(dateStr);
-          }
-          return (d && !isNaN(d.getTime())) ? d : null;
-        } catch (e) {}
-      }
-      return null;
-    }
-    function escapeHtml(unsafe) {
-        if (unsafe === null || unsafe === undefined) return '';
-        return String(unsafe).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '"': '&quot;', "'": '&#039;' }[m]));
-    }
-    function abbreviateText(text, maxLength = 30) {
-        if (typeof text !== 'string' || !text) return '';
-        if (text.length <= maxLength) {
-            return text;
-        }
-        let shortText = text.substring(0, maxLength - 3);
-        const lastSpace = shortText.lastIndexOf(' ');
-        if (lastSpace > Math.floor(maxLength / 3) && lastSpace < shortText.length) {
-             shortText = shortText.substring(0, lastSpace);
-        }
-        return shortText + ".";
-    }
-    function toTitleCase(str) {
-        if (typeof str !== 'string' || !str) return '';
-        const prepositions = ["a", "o", "e", "ou", "mas", "se", "que", "de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas", "por", "para", "com", "sem", "sob", "sobre", "trás"];
-        return str.toLowerCase().split(' ').map(function(word, index) {
-            if (index > 0 && prepositions.includes(word)) {
-                return word;
-            }
-            return word.charAt(0).toUpperCase() + word.slice(1);
-        }).join(' ');
-    }
-    function getFieldValue(item, possibleKeysArray, defaultValue = undefined) {
-      for (const key of possibleKeysArray) {
-        if (item.hasOwnProperty(key) && item[key] !== null && item[key] !== undefined && String(item[key]).trim() !== '') {
-          return item[key];
-        }
-      }
-      return '';
-    }
-    function getPlatformIconsHtml(platformString) {
-        if (!platformString) return '';
-        const platforms = String(platformString).split(',').map(p => p.trim().toLowerCase());
-        let iconsHtml = '<span class="platform-icons-wrapper">';
-        const platformIconMap = {
-            'facebook': 'fab fa-facebook-square',
-            'instagram': 'fab fa-instagram',
-            'linkedin': 'fab fa-linkedin',
-            'twitter': 'fab fa-twitter-square',
-            'youtube': 'fab fa-youtube',
-            'tiktok': 'fab fa-tiktok',
-            'pinterest': 'fab fa-pinterest-square',
-            'blog': 'fas fa-blog',
-            'site': 'fas fa-globe',
-            'whatsapp': 'fab fa-whatsapp-square',
-            'telegram': 'fab fa-telegram',
-            'email': 'fas fa-envelope-square',
-            'google ads': 'fab fa-google',
-            'meta ads': 'fab fa-meta',
-            'institucional': 'fas fa-building',
-            'comunicado': 'fas fa-bullhorn',
-            'e-mail mkt': 'fas fa-paper-plane',
-            'aniversario': 'fas fa-birthday-cake',
-            'todos': 'fas fa-globe'
+        // --- CONFIGURAÇÃO DE CAMPOS (IGUAL AO BACKUP) ---
+        const FIELD_KEYS = {
+            TITLE: ['Título', 'Nome', 'Title'],
+            ASSUNTO: ['Assunto'],
+            STATUS: ['Status', 'Status:'],
+            OBSERVACAO: ['Observação', 'Observacao', 'Observacão'],
+            APROVACAO: ['Aprovação', 'Aprovacao'],
+            PLATAFORMA: ['Plataforma', 'Plataformas'],
+            LINK_DRIVE: ['Link do Drive', 'Link Drive', 'Drive'],
+            COMENTARIOS: ['comments', 'Comentários', 'Comentarios'],
+            DATA_POSTAGEM: ['Data da Postagem', 'Data Postagem', 'dataPostagem', 'Data', 'Data:'],
+            DATA_ENTREGA: ['Data de Entrega', 'Data Entrega', 'dataEntrega', 'Prazo']
         };
-        platforms.forEach(p => {
-            const iconClass = platformIconMap[p] || 'fas fa-question-circle'; 
-            iconsHtml += `<i class="${iconClass} social-icon" title="${escapeHtml(p)}"></i>`;
-        });
-        iconsHtml += '</span>';
-        return iconsHtml;
-    }
-    function formatDisplayDate(dateStr) {
-        if (!dateStr) return 'N/A';
-        const d = parseDate(dateStr);
-        if (!d || isNaN(d.getTime())) return 'Data Inválida';
-        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    }
-    function renderSingleField(item, config) {
-        const fieldValue = getFieldValue(item, config.keys);
-        if (fieldValue === undefined && !config.keys.some(k => item.hasOwnProperty(k))) {
-             if (config.title === 'Comentários:') { /* não renderiza se a chave não existe */ } 
-             else { return ''; }
-        }
-        let displayValue = '';
-        if (config.isLink && typeof fieldValue === 'string' && (fieldValue.startsWith('http://') || fieldValue.startsWith('https://'))) {
-            displayValue = `<a href="${escapeHtml(fieldValue)}" target="_blank" class="link-field"><i class="fas fa-link"></i> Clique Aqui</a>`;
-        } else if (config.isDate) {
-            displayValue = formatDisplayDate(fieldValue);
-        } else if (config.title === 'Comentários:') {
-            const commentsRaw = getFieldValue(item, config.keys, '');
-            let commentsArray = [];
-            if (typeof commentsRaw === 'string' && commentsRaw.trim() !== '') {
-                commentsArray = commentsRaw.split('\n');
-            } else if (Array.isArray(commentsRaw)){
-                commentsArray = commentsRaw;
-            }
-            displayValue = commentsArray.map(c => `<div class="comment-item">${escapeHtml(String(c))}</div>`).join('');
-            if (!displayValue && !item.hasOwnProperty(config.keys.find(k => item.hasOwnProperty(k)))) return '';
-        } else if (config.keys.includes(FIELD_KEYS.STATUS[0])) {
-            const statusText = escapeHtml(String(fieldValue));
-            const statusLower = String(fieldValue).toLowerCase();
-            const blueStatusTerms = ["programado", "postagem programada", "comunicado engatilhado", "comunicado programado", "entregue", "concluído", "agendado"];
-            if (blueStatusTerms.includes(statusLower)) {
-                displayValue = `<span class="status-highlight-blue">${statusText}</span>`;
-            } else if (statusLower === "em andamento" || statusLower === "na fila") {
-                displayValue = `<span class="status-highlight-yellow">${statusText}</span>`;
-            } else if (statusLower === "pendente" || statusLower === "aguardando resposta" || statusLower === "parado") {
-                displayValue = `<span class="status-highlight-orange">${statusText}</span>`;
-            } else if (statusLower === "cancelado") {
-                displayValue = `<span class="status-text-strike">${statusText}</span>`;
-            } else {
-                displayValue = statusText;
-            }
-        } else {
-            displayValue = fieldValue === undefined || fieldValue === null ? '' : escapeHtml(String(fieldValue));
-        }
-        return `
-          <div class="card-field-custom">
-            <div class="field-label-custom">${escapeHtml(config.title)}</div>
-            <div class="field-value-custom">${
-  displayValue !== undefined && displayValue !== null && displayValue !== ''
-    ? displayValue
-    : (config.title === 'Comentários:' ? '<span style="color: var(--dark-gray); font-style: italic;">(Sem comentários)</span>' : '')
-}
-          </div>`;
-    }
-    function renderCards(items) {
-      const container = document.getElementById('cardContainer');
-      container.innerHTML = '';
-      if (!items || items.length === 0) {
-        container.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><h3>Nenhum card para exibir</h3><p>Aplique outros filtros ou adicione novos itens.</p></div>`;
-        return;
-      }
-      const summaryFieldsConfig = [
-        { title: 'Status:', keys: FIELD_KEYS.STATUS },
-        { title: 'Assunto:', keys: FIELD_KEYS.ASSUNTO },
-        { title: 'Observação:', keys: FIELD_KEYS.OBSERVACAO }
-      ];
-      const detailFieldsConfig = [
-        { title: 'Plataforma:', keys: FIELD_KEYS.PLATAFORMA },
-        { title: 'Link do Drive:', keys: FIELD_KEYS.LINK_DRIVE, isLink: true },
-        { title: 'Comentários:', keys: FIELD_KEYS.COMENTARIOS }
-      ];
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      items.forEach(item => {
-        const itemRowId = item._row;
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'card';
-        cardDiv.dataset.internalId = item._internalId;
-        const cardHeader = document.createElement('div');
-        cardHeader.className = 'card-header';
-        const statusValueForLogic = String(getFieldValue(item, FIELD_KEYS.STATUS, '')).toLowerCase();
-        const aprovacaoValueForLogic = String(getFieldValue(item, FIELD_KEYS.APROVACAO, '')).toLowerCase();
-        cardDiv.classList.remove('card-aprovado-background', 'card-reprovado-background', 'card-pendente-background');
-        if (aprovacaoValueForLogic.startsWith('reprovado')) {
-            cardDiv.classList.add('card-reprovado-background');
-        } else if (aprovacaoValueForLogic.startsWith('pendente')) {
-            cardDiv.classList.add('card-pendente-background');
-        } else if (aprovacaoValueForLogic.startsWith('aprovado')) {
-            cardDiv.classList.add('card-aprovado-background');
-        }
-        const criticalStatusTerms = ['cancelado', 'suspenso', 'excluído'];
-        let isCritical = criticalStatusTerms.includes(statusValueForLogic) || criticalStatusTerms.includes(aprovacaoValueForLogic);
-        cardHeader.classList.remove('header-status-concluido', 'header-aprovacao-pendente', 'header-aprovacao-reprovado', 'blinking-overdue', 'header-status-critical-issue', 'header-approval-warning-blinking');
-        if (isCritical) {
-            cardHeader.classList.add('header-status-critical-issue');
-        } else if (statusValueForLogic === 'concluido' || statusValueForLogic === 'concluído') {
-            cardHeader.classList.add('header-status-concluido');
-        } else if (aprovacaoValueForLogic.startsWith('pendente')) {
-            cardHeader.classList.add('header-aprovacao-pendente');
-        } else if (aprovacaoValueForLogic.startsWith('reprovado')) {
-            cardHeader.classList.add('header-aprovacao-reprovado');
-        }
-        const dataPostagemStr = getFieldValue(item, FIELD_KEYS.DATA_POSTAGEM);
-        const dataPostagem = parseDate(dataPostagemStr);
-        if (!isCritical && dataPostagem && dataPostagem < today && statusValueForLogic !== 'concluído' && statusValueForLogic !== 'concluido') {
-            cardHeader.classList.add('blinking-overdue');
-        }
-        const plataformaString = getFieldValue(item, FIELD_KEYS.PLATAFORMA);
-        const platformIconsHtml = getPlatformIconsHtml(plataformaString);
-        const rawTitle = getFieldValue(item, FIELD_KEYS.TITLE, 'Card Sem Título');
-        const abbreviatedTitle = String(rawTitle);
-        const cardTitleText = escapeHtml(toTitleCase(abbreviatedTitle));
-        cardHeader.innerHTML = `
-            <span class="card-title">${platformIconsHtml}${cardTitleText}</span>
-            <i class="fas ${isCritical ? '' : 'fa-chevron-down'} expand-icon"></i>
-        `;
-        const cardContentWrapper = document.createElement('div');
-        cardContentWrapper.className = 'card-content-wrapper';
-        const cardSummary = document.createElement('div');
-        cardSummary.className = 'card-summary';
-        let approvalNoticeHtml = '';
-        const currentDataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
-        const currentDataEntrega = parseDate(currentDataEntregaStr);
-        const aprovacaoOriginal = getFieldValue(item, FIELD_KEYS.APROVACAO, '');
-        if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado")) {
-            if (!isCritical) {
-                 cardHeader.classList.add('header-approval-warning-blinking');
-            }
-            approvalNoticeHtml = `<div class="approval-pending-notice">Aprovação Pendente</div>`;
-        } else if (aprovacaoValueForLogic.startsWith('aprovado dia')) {
-            cardDiv.classList.add('card-aprovado-background');
-            const finalStatusTerms = ['concluído', 'concluido', 'finalizado', 'postado'];
-            if (!finalStatusTerms.includes(statusValueForLogic)) {
-                approvalNoticeHtml = `<div class="approval-status-notice">${escapeHtml(aprovacaoOriginal)}</div>`;
-            }
-        } else if (aprovacaoValueForLogic.startsWith('aprovado')) {
-             cardDiv.classList.add('card-aprovado-background');
-             const finalStatusTerms = ['concluído', 'concluido', 'finalizado', 'postado'];
-             if (!finalStatusTerms.includes(statusValueForLogic)) {
-                approvalNoticeHtml = `<div class="approval-status-notice">Aprovado (detalhes não formatados)</div>`;
-             }
-        }
-        let summaryFieldsGeneratedHtml = '';
-        summaryFieldsConfig.forEach(config => {
-          summaryFieldsGeneratedHtml += renderSingleField(item, config);
-        });
-        cardSummary.innerHTML = approvalNoticeHtml + summaryFieldsGeneratedHtml;
-        const dataEntregaStr = getFieldValue(item, FIELD_KEYS.DATA_ENTREGA);
-        let __dateItemsHtmlOutput = '';
-        if (dataEntregaStr !== undefined) {
-            let entregaDateItemClasses = "date-item date-item-entrega";
-            if (currentDataEntrega && currentDataEntrega <= today && !aprovacaoValueForLogic.startsWith("aprovado") && !isCritical) {
-                entregaDateItemClasses += " date-item-blinking-warning";
-            }
-            __dateItemsHtmlOutput += `
-              <div class="${entregaDateItemClasses}">
-                <div class="field-label-custom">Data de Entrega:</div>
-                <div class="field-value-custom">${formatDisplayDate(dataEntregaStr)}</div>
-              </div>`;
-        }
-        if (dataPostagemStr !== undefined) {
-            __dateItemsHtmlOutput += `
-              <div class="date-item">
-                <div class="field-label-custom">Data da Postagem:</div>
-                <div class="field-value-custom">${formatDisplayDate(dataPostagemStr)}</div>
-              </div>`;
-        }
-        if (__dateItemsHtmlOutput.trim() !== '') {
-            cardSummary.innerHTML += `
-          <div class="card-field-custom dates-group">
-            <div class="date-pair">
-              ${__dateItemsHtmlOutput.trim()}
-            </div>
-          </div>`;
-        }
-        const cardDetails = document.createElement('div');
-        cardDetails.className = 'card-details';
-        cardDetails.innerHTML += renderSingleField(item, { title: 'Aprovação:', keys: FIELD_KEYS.APROVACAO });
-        detailFieldsConfig.forEach(config => {
-          cardDetails.innerHTML += renderSingleField(item, config);
-        });
-        cardDetails.innerHTML += `
-          <div class="card-actions">
-            <button class="btn-action btn-aprovacao" data-sheet-row="${itemRowId}"><i class="fas fa-star"></i> Aprovação</button>
-            <button class="btn-action btn-comentar" data-sheet-row="${itemRowId}"><i class="fas fa-comment-dots"></i> Comentar</button>
-          </div>`;
-        cardContentWrapper.appendChild(cardSummary);
-        cardContentWrapper.appendChild(cardDetails);
-        cardDiv.appendChild(cardHeader);
-        cardDiv.appendChild(cardContentWrapper);
-        container.appendChild(cardDiv);
-      });
-      addCardEventListeners();
-    }
-    function addCardEventListeners() {
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('click', function(event) {
-                if (event.target.closest('a, button, .card-actions')) {
-                    return;
-                }
-                this.classList.toggle('expanded');
-            });
-        });
-        document.querySelectorAll('.btn-comentar').forEach(button => {
-            button.addEventListener('click', function() {
-                const sheetRowIdFromDataset = this.dataset.sheetRow;
-                let sheetRowId;
 
-                if (sheetRowIdFromDataset && sheetRowIdFromDataset !== "undefined" && sheetRowIdFromDataset.trim() !== "") {
-                    sheetRowId = parseInt(sheetRowIdFromDataset, 10);
-                    if (isNaN(sheetRowId) || sheetRowId <= 1) {
-                        showSuccessModal('Erro', 'ID da linha inválido: ' + sheetRowIdFromDataset, 3000);
-                        console.error("ID da linha inválido após parseInt para comentário:", sheetRowIdFromDataset);
-                        return;
+        // --- HELPERS (PORTADOS DO BACKUP) ---
+        function getFieldValue(item, possibleKeysArray, defaultValue = '') {
+            for (const key of possibleKeysArray) {
+                if (item && item.hasOwnProperty(key) && item[key] !== null && item[key] !== undefined && String(item[key]).trim() !== '') {
+                    return item[key];
+                }
+            }
+            return defaultValue;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) return dateStr;
+            if (typeof dateStr === 'string') {
+                try {
+                    let d = null;
+                    if (dateStr.includes('/')) {
+                        const parts = dateStr.split('/');
+                        if (parts.length === 3) d = new Date(parts[2], parseInt(parts[1])-1, parts[0]);
+                        else if (parts.length === 2) d = new Date(new Date().getFullYear(), parseInt(parts[1])-1, parts[0]);
+                    } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+                        d = new Date(dateStr);
                     }
-                } else {
-                    showSuccessModal('Erro', 'ID da linha não encontrado para adicionar comentário.', 3000);
-                    console.error("ID da linha ausente ou inválido no dataset para comentário:", sheetRowIdFromDataset);
-                    return;
-                }
+                    return (d && !isNaN(d.getTime())) ? d : null;
+                } catch (e) { return null; }
+            }
+            return null;
+        }
 
-                const commentText = prompt("Digite seu comentário:");
-                if (commentText !== null && commentText.trim() !== "") {
-                    const now = new Date();
-                    const formattedTimestamp = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} - ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}h: `;
-                    const fullComment = formattedTimestamp + commentText;
-                    sendDataToSheet({ action: 'addComment', row: sheetRowId, comment: fullComment }, "Comentário enviado!", () => {
-                        loadData(); 
+        const formatDate = (dateInput) => {
+            const d = parseDate(dateInput);
+            if (!d) return 'N/A';
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        };
+
+        // --- COMPONENTE DE ÍCONE ---
+        const Icon = ({ name, size = 18, className = "", style = {} }) => {
+            const iconRef = React.useRef(null);
+            useEffect(() => {
+                if (iconRef.current && window.lucide) {
+                    lucide.createIcons({
+                        attrs: { size, class: className, style: Object.entries(style).map(([k,v]) => `${k}:${v}`).join(';') },
+                        nameAttr: 'data-lucide'
                     });
                 }
-            });
-        });
-        document.querySelectorAll('.btn-aprovacao').forEach(button => {
-            button.addEventListener('click', function() {
-                const sheetRowIdFromDataset = this.dataset.sheetRow;
-                let sheetRowId;
+            }, [name, size, className, style]);
+            return <i data-lucide={name} ref={iconRef}></i>;
+        };
 
-                if (sheetRowIdFromDataset && sheetRowIdFromDataset !== "undefined" && sheetRowIdFromDataset.trim() !== "") {
-                    sheetRowId = parseInt(sheetRowIdFromDataset, 10);
-                    if (isNaN(sheetRowId) || sheetRowId <= 1) {
-                        showSuccessModal('Erro', 'ID da linha inválido: ' + sheetRowIdFromDataset, 3000);
-                        console.error("ID da linha inválido após parseInt para aprovação:", sheetRowIdFromDataset);
-                        return;
+        // --- APP PRINCIPAL ---
+        function App() {
+            // State
+            const [rawTasks, setRawTasks] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [selectedTask, setSelectedTask] = useState(null);
+            const [modalMessage, setModalMessage] = useState(null); // Para sucesso/erro
+
+            // Filters State
+            const [filterMonth, setFilterMonth] = useState('');
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [filterPlatform, setFilterPlatform] = useState('all');
+            const [showCompleted, setShowCompleted] = useState(true); // Toggle "Olho"
+
+            // --- DATA FETCHING ---
+            const loadData = useCallback(() => {
+                setLoading(true);
+                fetch('https://agenda-portal-2d149-default-rtdb.firebaseio.com/agenda.json')
+                .then(r => r.json())
+                .then(json => {
+                    if (json) {
+                        const items = Object.values(json).map(item => ({
+                            ...item,
+                            _internalId: item._internalId || Math.random().toString(36).substr(2, 9)
+                        }));
+                        setRawTasks(items);
+                        
+                        // Set current month filter on first load
+                        if (filterMonth === '') {
+                            const now = new Date();
+                            setFilterMonth(`${now.getFullYear()}-${now.getMonth()}`);
+                        }
                     }
-                } else {
-                    showSuccessModal('Erro', 'ID da linha não encontrado para atualizar aprovação.', 3000);
-                    console.error("ID da linha ausente ou inválido no dataset para aprovação:", sheetRowIdFromDataset);
-                    return;
-                }
+                })
+                .catch(err => console.error("Erro Firebase:", err))
+                .finally(() => setLoading(false));
+            }, []);
 
-                const newStatusPrompt = prompt("Digite o novo status de aprovação (ex: Aprovado, Reprovado, Pendente):");
-                if (newStatusPrompt !== null && newStatusPrompt.trim() !== "") {
-                    const now = new Date();
-                    const dia = String(now.getDate()).padStart(2, "0");
-                    const mes = String(now.getMonth() + 1).padStart(2, "0");
-                    const horas = String(now.getHours()).padStart(2, "0");
-                    const minutos = String(now.getMinutes()).padStart(2, "0");
-                    const newStatusValue = `${newStatusPrompt.trim()} dia ${dia}/${mes} às ${horas}:${minutos}h`;
-                    sendDataToSheet({ action: "updateI", row: sheetRowId, value: newStatusValue }, "Status de aprovação atualizado!", () => {
-                        loadData(); 
+            useEffect(() => {
+                loadData();
+            }, [loadData]);
+
+            // --- COMPUTED DATA (FILTROS) ---
+            const { filteredTasks, stats, availableMonths, availablePlatforms, availableStatuses } = useMemo(() => {
+                let filtered = [...rawTasks];
+                const statsCounter = { total: 0, pending: 0, inProgress: 0, completed: 0 };
+                const monthsSet = new Map();
+                const platformsSet = new Set();
+                const statusesSet = new Set();
+
+                // 1. Coletar metadados globais (para os selects de filtro)
+                rawTasks.forEach(task => {
+                    // Status
+                    const s = getFieldValue(task, FIELD_KEYS.STATUS);
+                    if(s) statusesSet.add(s);
+                    
+                    // Plataforma
+                    const p = getFieldValue(task, FIELD_KEYS.PLATAFORMA);
+                    if(p) p.split(',').forEach(x => platformsSet.add(x.trim()));
+
+                    // Meses
+                    const d = parseDate(getFieldValue(task, FIELD_KEYS.DATA_ENTREGA));
+                    if(d) {
+                        const key = `${d.getFullYear()}-${d.getMonth()}`;
+                        if(!monthsSet.has(key)) {
+                            monthsSet.set(key, { 
+                                value: key, 
+                                label: d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }),
+                                sort: d.getTime()
+                            });
+                        }
+                    }
+                });
+
+                // 2. Aplicar Filtros
+                if (filterMonth) {
+                    const [year, month] = filterMonth.split('-').map(Number);
+                    filtered = filtered.filter(t => {
+                        const d = parseDate(getFieldValue(t, FIELD_KEYS.DATA_ENTREGA));
+                        return d && d.getMonth() === month && d.getFullYear() === year;
                     });
                 }
-            });
-        });
-    }
-function sendDataToSheet(payload, successMessageBase = "Ação enviada para a planilha", callback) {
-    const webAppBase = 'https://script.google.com/macros/s/AKfycbzO7oR3CNBZD-NCnij7Xa-xScc09EWGU69uq81VDHPZmlmwjYJ4s_4rIYzy2Gp1iXvV/exec';
-    const params = new URLSearchParams();
-    params.set('action', payload.action);
-    params.set('row', payload.row);
-    if (payload.action === 'addComment') params.set('comment', payload.comment);
-    if (payload.action === 'updateI') params.set('value', payload.value);
 
-    const cbName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 8);
+                if (filterStatus !== 'all') {
+                    filtered = filtered.filter(t => getFieldValue(t, FIELD_KEYS.STATUS) === filterStatus);
+                }
 
-    console.log('[sendDataToSheet] Enviando para Apps Script. Callback:', cbName, 'Params:', params.toString());
+                if (filterPlatform !== 'all') {
+                    filtered = filtered.filter(t => {
+                        const p = getFieldValue(t, FIELD_KEYS.PLATAFORMA);
+                        return p && p.includes(filterPlatform);
+                    });
+                }
 
-    window[cbName] = function(resp) {
-        console.log("Retorno Apps Script:", resp);
-        if (resp && resp.status === 'ok'){
-            showSuccessModal("Sucesso!", `${successMessageBase}`, 1000, callback);
-        } else {
-            showSuccessModal("Erro do Servidor", resp && resp.message ? resp.message : "Resposta inesperada do servidor.", 4000);
-            console.error("Erro retornado pelo Apps Script:", resp);
+                // 3. Lógica "Concluídos" (Ocultar/Mostrar) - Igual ao Backup
+                if (!showCompleted) {
+                    filtered = filtered.filter(t => {
+                        const s = String(getFieldValue(t, FIELD_KEYS.STATUS)).toLowerCase();
+                        const a = String(getFieldValue(t, FIELD_KEYS.APROVACAO)).toLowerCase();
+                        const isDone = (s.includes('conclu') || s.includes('finaliz')) && a.includes('aprovado');
+                        return !isDone;
+                    });
+                }
+
+                // 4. Calcular Estatísticas dos FILTRADOS
+                filtered.forEach(t => {
+                    const s = String(getFieldValue(t, FIELD_KEYS.STATUS)).toLowerCase();
+                    const a = String(getFieldValue(t, FIELD_KEYS.APROVACAO)).toLowerCase();
+                    
+                    statsCounter.total++;
+                    if (s.includes('conclu') || s.includes('finaliz') || a.includes('aprovado')) statsCounter.completed++;
+                    else if (s.includes('programado') || s.includes('andamento')) statsCounter.inProgress++;
+                    else statsCounter.pending++;
+                });
+                
+                // Ordenar por data
+                filtered.sort((a,b) => {
+                    const da = parseDate(getFieldValue(a, FIELD_KEYS.DATA_ENTREGA)) || new Date(0);
+                    const db = parseDate(getFieldValue(b, FIELD_KEYS.DATA_ENTREGA)) || new Date(0);
+                    return da - db;
+                });
+
+                return {
+                    filteredTasks: filtered,
+                    stats: statsCounter,
+                    availableMonths: Array.from(monthsSet.values()).sort((a,b) => a.sort - b.sort),
+                    availablePlatforms: Array.from(platformsSet).sort(),
+                    availableStatuses: Array.from(statusesSet).sort()
+                };
+
+            }, [rawTasks, filterMonth, filterStatus, filterPlatform, showCompleted]);
+
+            // --- APPS SCRIPT INTERACTION (JSONP) ---
+            const sendDataToSheet = (payload, successMsg) => {
+                setModalMessage({ type: 'loading', text: 'Enviando...' });
+                
+                const webAppBase = 'https://script.google.com/macros/s/AKfycbzO7oR3CNBZD-NCnij7Xa-xScc09EWGU69uq81VDHPZmlmwjYJ4s_4rIYzy2Gp1iXvV/exec';
+                const params = new URLSearchParams();
+                params.set('action', payload.action);
+                params.set('row', payload.row);
+                if (payload.action === 'addComment') params.set('comment', payload.comment);
+                if (payload.action === 'updateI') params.set('value', payload.value);
+
+                const cbName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 8);
+                params.set('callback', cbName);
+
+                window[cbName] = function(resp) {
+                    if (resp && resp.status === 'ok') {
+                        setModalMessage({ type: 'success', text: successMsg });
+                        setTimeout(() => {
+                            setModalMessage(null);
+                            setSelectedTask(null); // Fecha modal da tarefa
+                            loadData(); // Recarrega dados
+                        }, 1500);
+                    } else {
+                        setModalMessage({ type: 'error', text: resp?.message || 'Erro desconhecido.' });
+                        setTimeout(() => setModalMessage(null), 3000);
+                    }
+                    delete window[cbName];
+                    document.getElementById(cbName)?.remove();
+                };
+
+                const script = document.createElement('script');
+                script.id = cbName;
+                script.src = `${webAppBase}?${params.toString()}`;
+                script.onerror = () => {
+                    setModalMessage({ type: 'error', text: 'Erro de conexão com Google Script.' });
+                    setTimeout(() => setModalMessage(null), 3000);
+                };
+                document.body.appendChild(script);
+            };
+
+            // --- ACTIONS ---
+            const handleApprove = (task, isApproved) => {
+                const row = task._row;
+                if(!row) return alert("Erro: ID da linha não encontrado.");
+                
+                const now = new Date();
+                const timeStr = `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")} às ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}h`;
+                
+                let val = '';
+                if(isApproved === 'approve') val = `Aprovado dia ${timeStr}`;
+                else if(isApproved === 'reject') val = `Reprovado dia ${timeStr}`;
+                else val = 'Pendente'; // Reset
+
+                // Se for custom (prompt)
+                if(isApproved === 'custom') {
+                    const userVal = prompt("Digite o status de aprovação:", "Aprovado com ressalvas");
+                    if(!userVal) return;
+                    val = `${userVal} - ${timeStr}`;
+                }
+
+                sendDataToSheet({ action: "updateI", row: row, value: val }, "Status Atualizado!");
+            };
+
+            const handleComment = (task) => {
+                const row = task._row;
+                if(!row) return alert("Erro: ID da linha não encontrado.");
+                const text = prompt("Digite seu comentário:");
+                if(text) {
+                    const now = new Date();
+                    const timestamp = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')} - ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}h`;
+                    sendDataToSheet({ action: 'addComment', row: row, comment: `${timestamp}: ${text}` }, "Comentário adicionado!");
+                }
+            };
+
+            // --- RENDER HELPERS ---
+            const getStatusColor = (status, approval) => {
+                const s = String(status).toLowerCase();
+                const a = String(approval).toLowerCase();
+                
+                if (a.includes('reprovado')) return { bg: '#FEE2E2', text: '#d0021b', border: '#d0021b', icon: 'XCircle' };
+                if (a.includes('aprovado')) return { bg: '#DCFCE7', text: '#166534', border: '#166534', icon: 'CheckCircle2' };
+                if (s.includes('conclu') || s.includes('final')) return { bg: '#DCFCE7', text: '#166534', border: '#166534', icon: 'Check' };
+                if (s.includes('pendente') || s.includes('aguardando')) return { bg: '#FEF3C7', text: '#B45309', border: '#F59E0B', icon: 'Clock' };
+                if (s.includes('andamento') || s.includes('fila')) return { bg: '#E0F2FE', text: '#0369A1', border: '#0EA5E9', icon: 'Loader' };
+                
+                return { bg: '#F3F4F6', text: '#4B5563', border: '#9CA3AF', icon: 'HelpCircle' }; // Default
+            };
+
+            return (
+                <div className="min-h-screen pb-12">
+                    {/* --- HEADER --- */}
+                    <header className="bg-white border-b border-border shadow-sm sticky top-0 z-10">
+                        <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-2">
+                                    <Icon name="LayoutDashboard" className="text-secondary" /> Painel Marketing
+                                </h1>
+                                <p className="text-sm text-muted-foreground hidden md:block">Gerenciamento de tarefas PSR</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {loading && <div className="loader w-6 h-6 border-2"></div>}
+                                <button onClick={loadData} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition" title="Recarregar">
+                                    <Icon name="RefreshCw" size={20} className={loading ? "animate-spin" : ""} />
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* --- KPI SECTION --- */}
+                    <section className="bg-white border-b border-border">
+                        <div className="container mx-auto px-4 py-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="card-elevated p-4 border-l-4 border-l-blue-900">
+                                    <div className="text-label text-muted-foreground">Total</div>
+                                    <div className="text-2xl font-bold text-primary">{stats.total}</div>
+                                </div>
+                                <div className="card-elevated p-4 border-l-4 border-l-yellow-500">
+                                    <div className="text-label text-muted-foreground">Pendentes</div>
+                                    <div className="text-2xl font-bold text-yellow-700">{stats.pending}</div>
+                                </div>
+                                <div className="card-elevated p-4 border-l-4 border-l-blue-400">
+                                    <div className="text-label text-muted-foreground">Em Andamento</div>
+                                    <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+                                </div>
+                                <div className="card-elevated p-4 border-l-4 border-l-green-600">
+                                    <div className="text-label text-muted-foreground">Concluídas</div>
+                                    <div className="text-2xl font-bold text-green-700">{stats.completed}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- FILTERS --- */}
+                    <section className="bg-gray-50 py-6 border-b border-border">
+                        <div className="container mx-auto px-4">
+                            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-border">
+                                <div className="flex flex-wrap items-center gap-3 w-full">
+                                    <div className="flex items-center gap-2 text-muted-foreground mr-2">
+                                        <Icon name="Filter" size={18} />
+                                        <span className="font-medium text-sm">Filtros:</span>
+                                    </div>
+                                    
+                                    {/* Mês Select */}
+                                    <select 
+                                        className="px-3 py-2 rounded-md border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-primary outline-none"
+                                        value={filterMonth}
+                                        onChange={(e) => setFilterMonth(e.target.value)}
+                                    >
+                                        <option value="">Todos os Meses</option>
+                                        {availableMonths.map(m => (
+                                            <option key={m.value} value={m.value}>{m.label}</option>
+                                        ))}
+                                    </select>
+
+                                    {/* Status Select */}
+                                    <select 
+                                        className="px-3 py-2 rounded-md border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-primary outline-none max-w-[150px]"
+                                        value={filterStatus}
+                                        onChange={(e) => setFilterStatus(e.target.value)}
+                                    >
+                                        <option value="all">Todos Status</option>
+                                        {availableStatuses.map(s => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
+                                    </select>
+
+                                    {/* Platform Select */}
+                                    <select 
+                                        className="px-3 py-2 rounded-md border border-gray-300 text-sm bg-white focus:ring-2 focus:ring-primary outline-none max-w-[150px]"
+                                        value={filterPlatform}
+                                        onChange={(e) => setFilterPlatform(e.target.value)}
+                                    >
+                                        <option value="all">Todas Plataformas</option>
+                                        {availablePlatforms.map(p => (
+                                            <option key={p} value={p}>{p}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-2 w-full md:w-auto">
+                                    <button 
+                                        onClick={() => setShowCompleted(!showCompleted)}
+                                        className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all w-full md:w-auto justify-center ${showCompleted ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}
+                                    >
+                                        <Icon name={showCompleted ? "Eye" : "EyeOff"} size={16} />
+                                        {showCompleted ? "Ocultar Concluídos" : "Mostrar Concluídos"}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* --- TASKS GRID --- */}
+                    <main className="container mx-auto px-4 py-8">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-20">
+                                <div className="loader mb-4"></div>
+                                <p className="text-muted-foreground">Carregando tarefas do Firebase...</p>
+                            </div>
+                        ) : filteredTasks.length === 0 ? (
+                            <div className="text-center py-20 bg-white rounded-lg border border-dashed border-gray-300">
+                                <Icon name="Inbox" size={48} className="mx-auto text-gray-300 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900">Nenhuma tarefa encontrada</h3>
+                                <p className="text-gray-500">Tente ajustar os filtros acima.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {filteredTasks.map((task, index) => {
+                                    const status = getFieldValue(task, FIELD_KEYS.STATUS, 'Sem Status');
+                                    const approval = getFieldValue(task, FIELD_KEYS.APROVACAO, 'Pendente');
+                                    const title = getFieldValue(task, FIELD_KEYS.TITLE, 'Sem Título');
+                                    const platform = getFieldValue(task, FIELD_KEYS.PLATAFORMA, 'Geral');
+                                    const dueDate = getFieldValue(task, FIELD_KEYS.DATA_ENTREGA);
+                                    
+                                    const style = getStatusColor(status, approval);
+                                    
+                                    return (
+                                        <div 
+                                            key={task._internalId}
+                                            onClick={() => setSelectedTask(task)}
+                                            className="card-elevated p-5 cursor-pointer group bg-white relative overflow-hidden animate-fadeInUp flex flex-col h-full"
+                                            style={{ animationDelay: `${index * 50}ms`, borderTop: `4px solid ${style.border}` }}
+                                        >
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="text-xs font-bold uppercase text-gray-500 tracking-wider bg-gray-100 px-2 py-1 rounded">
+                                                    {platform}
+                                                </span>
+                                                <div className="status-pill" style={{ backgroundColor: style.bg, color: style.text }}>
+                                                    <Icon name={style.icon} size={12} />
+                                                    {status}
+                                                </div>
+                                            </div>
+
+                                            <h3 className="text-lg font-bold text-gray-800 mb-2 leading-tight line-clamp-2 flex-grow">
+                                                {title}
+                                            </h3>
+
+                                            <div className="space-y-2 mt-4 text-sm text-gray-600">
+                                                <div className="flex items-center gap-2">
+                                                    <Icon name="Calendar" size={14} className="text-gray-400" />
+                                                    <span className={!parseDate(dueDate) ? "text-gray-400" : "font-medium"}>
+                                                        Entrega: {formatDate(dueDate)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Icon name="FileCheck" size={14} className="text-gray-400" />
+                                                    <span className={`${approval.toLowerCase().includes('reprovado') ? 'text-red-600 font-bold' : ''}`}>
+                                                        {approval}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span>Ver detalhes</span>
+                                                <Icon name="ArrowRight" size={14} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </main>
+
+                    {/* --- MODAL DE DETALHES --- */}
+                    {selectedTask && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedTask(null)}>
+                            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeInUp" onClick={e => e.stopPropagation()}>
+                                {/* Modal Header */}
+                                <div className="p-6 border-b border-border bg-gray-50 flex justify-between items-start sticky top-0 z-10">
+                                    <div>
+                                        <div className="flex gap-2 mb-2">
+                                            <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold uppercase">
+                                                {getFieldValue(selectedTask, FIELD_KEYS.PLATAFORMA)}
+                                            </span>
+                                            <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs font-bold">
+                                                ID: {selectedTask._row || 'N/A'}
+                                            </span>
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-gray-900">{getFieldValue(selectedTask, FIELD_KEYS.TITLE)}</h2>
+                                    </div>
+                                    <button onClick={() => setSelectedTask(null)} className="text-gray-400 hover:text-gray-700 transition">
+                                        <Icon name="X" size={24} />
+                                    </button>
+                                </div>
+
+                                {/* Modal Content */}
+                                <div className="p-6 space-y-6">
+                                    {/* Status Block */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div className="text-label text-muted-foreground mb-1">Status Atual</div>
+                                            <div className="font-semibold text-gray-800">{getFieldValue(selectedTask, FIELD_KEYS.STATUS)}</div>
+                                        </div>
+                                        <div className={`p-3 rounded-lg border ${String(getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)).toLowerCase().includes('reprovado') ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
+                                            <div className="text-label mb-1 opacity-80">Aprovação</div>
+                                            <div className="font-bold">{getFieldValue(selectedTask, FIELD_KEYS.APROVACAO)}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Info Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 mb-1">Assunto</h4>
+                                            <p className="text-gray-600">{getFieldValue(selectedTask, FIELD_KEYS.ASSUNTO) || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 mb-1">Data Entrega</h4>
+                                            <p className="text-gray-600">{formatDate(getFieldValue(selectedTask, FIELD_KEYS.DATA_ENTREGA))}</p>
+                                        </div>
+                                        <div className="col-span-1 md:col-span-2">
+                                            <h4 className="font-bold text-gray-900 mb-1">Link Drive</h4>
+                                            {getFieldValue(selectedTask, FIELD_KEYS.LINK_DRIVE) ? (
+                                                <a href={getFieldValue(selectedTask, FIELD_KEYS.LINK_DRIVE)} target="_blank" className="text-blue-600 hover:underline flex items-center gap-1">
+                                                    <Icon name="Link" size={14} /> Abrir Link
+                                                </a>
+                                            ) : <span className="text-gray-400">Nenhum link</span>}
+                                        </div>
+                                    </div>
+
+                                    {/* Description/Observation */}
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">Observação / Descrição</h4>
+                                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-3 rounded-md border border-gray-100">
+                                            {getFieldValue(selectedTask, FIELD_KEYS.OBSERVACAO) || 'Sem observações.'}
+                                        </p>
+                                    </div>
+
+                                    {/* Comments */}
+                                    <div>
+                                        <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                            <Icon name="MessageSquare" size={16} /> Comentários
+                                        </h4>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                            {String(getFieldValue(selectedTask, FIELD_KEYS.COMENTARIOS, '')).split('\n').map((c, i) => (
+                                                c.trim() && (
+                                                    <div key={i} className="text-xs bg-yellow-50 p-2 rounded border border-yellow-100 text-gray-700">
+                                                        {c}
+                                                    </div>
+                                                )
+                                            ))}
+                                            {!getFieldValue(selectedTask, FIELD_KEYS.COMENTARIOS) && <span className="text-xs text-gray-400 italic">Nenhum comentário.</span>}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Modal Actions */}
+                                <div className="p-4 border-t border-border bg-gray-50 flex flex-col sm:flex-row gap-3">
+                                    <button 
+                                        onClick={() => handleApprove(selectedTask, 'approve')}
+                                        className="btn-action bg-green-600 text-white hover:bg-green-700 shadow-sm"
+                                    >
+                                        <Icon name="ThumbsUp" size={16} /> Aprovar
+                                    </button>
+                                    <button 
+                                        onClick={() => handleApprove(selectedTask, 'reject')}
+                                        className="btn-action bg-red-600 text-white hover:bg-red-700 shadow-sm"
+                                    >
+                                        <Icon name="ThumbsDown" size={16} /> Reprovar
+                                    </button>
+                                    <button 
+                                        onClick={() => handleComment(selectedTask)}
+                                        className="btn-action bg-primary text-white hover:bg-primary/90 shadow-sm"
+                                    >
+                                        <Icon name="MessageCircle" size={16} /> Comentar
+                                    </button>
+                                    <button 
+                                        onClick={() => handleApprove(selectedTask, 'custom')}
+                                        className="btn-action bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                                    >
+                                        <Icon name="Edit3" size={16} /> Status Personalizado
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- FEEDBACK TOAST --- */}
+                    {modalMessage && (
+                        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[100] animate-fadeInUp">
+                            <div className={`px-6 py-3 rounded-full shadow-xl flex items-center gap-3 font-medium text-white ${
+                                modalMessage.type === 'loading' ? 'bg-primary' : 
+                                modalMessage.type === 'error' ? 'bg-red-600' : 'bg-green-600'
+                            }`}>
+                                {modalMessage.type === 'loading' && <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>}
+                                {modalMessage.type === 'success' && <Icon name="Check" size={18} />}
+                                {modalMessage.type === 'error' && <Icon name="AlertTriangle" size={18} />}
+                                <span>{modalMessage.text}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
         }
-        delete window[cbName];
-        if (script && script.parentNode) script.remove();
-    };
-    params.set('callback', cbName);
 
-    const script = document.createElement('script');
-    script.src = `${webAppBase}?${params.toString()}`;
-    script.onerror = function() {
-        console.error('Erro ao conectar com o servidor Google Apps Script! URL:', script.src);
-        showSuccessModal('Erro de Conexão', 'Não foi possível conectar ao servidor do Google Apps Script.', 4000);
-        if (window[cbName]) delete window[cbName];
-        if (script && script.parentNode) script.remove();
-    };
-    document.body.appendChild(script);
-}
-    document.addEventListener('DOMContentLoaded', loadData);
-  </script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
